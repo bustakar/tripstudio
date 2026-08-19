@@ -15,6 +15,8 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     environment: production
+    env:
+      DEPLOY_CONFIGURED: ${{ secrets.DATABASE_URL != '' && secrets.BETTER_AUTH_SECRET != '' && secrets.VERCEL_TOKEN != '' && secrets.VERCEL_ORG_ID != '' && secrets.VERCEL_PROJECT_ID != '' }}
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -28,11 +30,13 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm check
       - run: pnpm db:migrate
+        if: env.DEPLOY_CONFIGURED == 'true'
         env:
           APP_URL: https://tripstudio.cc
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           BETTER_AUTH_SECRET: ${{ secrets.BETTER_AUTH_SECRET }}
       - run: pnpm dlx vercel@latest deploy --archive=tgz --prod --token="$VERCEL_TOKEN"
+        if: env.DEPLOY_CONFIGURED == 'true'
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
