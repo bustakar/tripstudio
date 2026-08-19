@@ -19,3 +19,5 @@ minimumReleaseAgeExclude:
   - '@tanstack/start-plugin-core@1.171.37'
   - '@tanstack/start-server-core@1.169.29'
   - '@tanstack/start-storage-context@1.167.27'
+patchedDependencies:
+  '@better-auth/cimd@1.7.0': patches/@better-auth__cimd@1.7.0.patch
