@@ -12,10 +12,15 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { authClient } from '@/lib/auth-client'
+import { getSession } from '@/lib/auth-functions'
 
-export const Route = createFileRoute('/consent')({ component: ConsentPage })
+export const Route = createFileRoute('/consent')({
+  loader: () => getSession(),
+  component: ConsentPage,
+})
 
 function ConsentPage() {
+  const session = Route.useLoaderData()
   const [error, setError] = useState<string | null>(null)
   const [pending, setPending] = useState(false)
 
@@ -36,7 +41,18 @@ function ConsentPage() {
             It cannot book or cancel travel.
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="grid gap-4">
+          {session && (
+            <div className="rounded-md border bg-muted/40 px-3 py-2">
+              <p className="text-xs text-muted-foreground">Signed in as</p>
+              <p className="truncate text-sm font-medium">
+                {session.user.name}
+              </p>
+              <p className="truncate text-sm text-muted-foreground">
+                {session.user.email}
+              </p>
+            </div>
+          )}
           {error && (
             <Alert variant="destructive">
               <AlertDescription>{error}</AlertDescription>
