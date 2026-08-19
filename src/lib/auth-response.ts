@@ -37,5 +37,10 @@ export async function followOAuthDocumentRedirect(
   const location = new URL(body.url, request.url)
   if (location.protocol !== 'http:' && location.protocol !== 'https:')
     return response
-  return Response.redirect(location, 302)
+
+  const headers = new Headers(response.headers)
+  headers.delete('content-length')
+  headers.delete('content-type')
+  headers.set('location', location.toString())
+  return new Response(null, { status: 302, headers })
 }

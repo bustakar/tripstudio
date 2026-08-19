@@ -8,7 +8,13 @@ describe('auth response', () => {
       'https://tripstudio.example/api/auth/oauth2/authorize?client_id=chatgpt',
       { headers: { 'sec-fetch-dest': 'document' } },
     )
-    const response = Response.json({ redirect: true, url: '/sign-in?signed=1' })
+    const headers = new Headers({ 'content-type': 'application/json' })
+    headers.append('set-cookie', 'oauth-state=one; Path=/; HttpOnly')
+    headers.append('set-cookie', 'oauth-code=two; Path=/; HttpOnly')
+    const response = new Response(
+      JSON.stringify({ redirect: true, url: '/sign-in?signed=1' }),
+      { headers },
+    )
 
     const result = await followOAuthDocumentRedirect(request, response)
 
@@ -16,6 +22,11 @@ describe('auth response', () => {
     expect(result.headers.get('location')).toBe(
       'https://tripstudio.example/sign-in?signed=1',
     )
+    expect(result.headers.getSetCookie()).toEqual([
+      'oauth-state=one; Path=/; HttpOnly',
+      'oauth-code=two; Path=/; HttpOnly',
+    ])
+    expect(result.headers.get('content-type')).toBeNull()
   })
 
   it('preserves redirect JSON for fetch clients', async () => {
