@@ -1,6 +1,6 @@
 {
   "name": "tripstudio-dev",
-  "version": "0.1.0+codex.20260819153209",
+  "version": "0.1.0+codex.20260819173328",
   "description": "Development build of Trip Studio.",
   "author": {
     "name": "Trip Studio",
@@ -20,5 +20,6 @@
     ],
     "defaultPrompt": "Help me test a trip planning flow in Trip Studio Dev."
   },
-  "mcpServers": "./.mcp.json"
+  "mcpServers": "./.mcp.json",
+  "apps": "./.app.json"
 }

@@ -1,6 +1,6 @@
 {
   "name": "tripstudio",
-  "version": "0.1.0+codex.20260819153209",
+  "version": "0.1.0+codex.20260819173328",
   "description": "Explore a trip naturally and keep its evolving project current.",
   "author": {
     "name": "Trip Studio",
@@ -20,5 +20,6 @@
     ],
     "defaultPrompt": "Help me plan a trip and keep my Trip Studio project current."
   },
-  "mcpServers": "./.mcp.json"
+  "mcpServers": "./.mcp.json",
+  "apps": "./.app.json"
 }
