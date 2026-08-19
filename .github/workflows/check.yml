@@ -79,7 +79,6 @@ jobs:
       url: ${{ steps.deploy.outputs.url }}
     permissions:
       contents: read
-      issues: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.10
@@ -132,34 +131,9 @@ jobs:
           VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
       - name: Publish preview URL
-        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        run: echo "Web preview: $PREVIEW_URL" >> "$GITHUB_STEP_SUMMARY"
         env:
           PREVIEW_URL: ${{ steps.deploy.outputs.url }}
-        with:
-          script: |
-            const marker = '<!-- tripstudio-web-preview -->'
-            const body = `${marker}\nWeb preview: ${process.env.PREVIEW_URL}`
-            const { data: comments } = await github.rest.issues.listComments({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number,
-            })
-            const comment = comments.find(({ body }) => body?.includes(marker))
-            if (comment) {
-              await github.rest.issues.updateComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                comment_id: comment.id,
-                body,
-              })
-            } else {
-              await github.rest.issues.createComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: context.issue.number,
-                body,
-              })
-            }
 
   cleanup-preview:
     if: >-
