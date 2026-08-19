@@ -15,6 +15,10 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { authClient } from '@/lib/auth-client'
+import {
+  oauthAuthorizationRedirect,
+  postAuthRedirect,
+} from '@/lib/post-auth-redirect'
 
 export const Route = createFileRoute('/sign-in')({
   validateSearch: z.object({ redirect: z.string().optional() }),
@@ -23,7 +27,6 @@ export const Route = createFileRoute('/sign-in')({
 
 function SignInPage() {
   const navigate = useNavigate()
-  const { redirect } = Route.useSearch()
   const [register, setRegister] = useState(false)
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
@@ -41,8 +44,12 @@ function SignInPage() {
     setPending(false)
     if (result.error)
       return setError(result.error.message ?? 'Authentication failed')
-    if (redirect?.startsWith('/')) window.location.href = redirect
-    else await navigate({ to: '/' })
+    const oauthRedirect = oauthAuthorizationRedirect(
+      window.location.search,
+      window.location.origin,
+    )
+    if (oauthRedirect) return window.location.assign(oauthRedirect)
+    await navigate({ to: postAuthRedirect(window.location.search) })
   }
 
   return (
