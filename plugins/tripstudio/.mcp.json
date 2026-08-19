@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "tripstudio": {
+      "type": "http",
+      "url": "https://tripstudio.cc/mcp"
+    }
+  }
+}
