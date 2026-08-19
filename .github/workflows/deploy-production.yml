@@ -44,22 +44,13 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - name: Validate deployment configuration
         run: |
-          : "${DATABASE_URL:?Missing production secret DATABASE_URL}"
-          : "${BETTER_AUTH_SECRET:?Missing production secret BETTER_AUTH_SECRET}"
           : "${VERCEL_TOKEN:?Missing production secret VERCEL_TOKEN}"
-          : "${VERCEL_ORG_ID:?Missing production secret VERCEL_ORG_ID}"
-          : "${VERCEL_PROJECT_ID:?Missing production secret VERCEL_PROJECT_ID}"
+          : "${VERCEL_ORG_ID:?Missing repository variable VERCEL_ORG_ID}"
+          : "${VERCEL_PROJECT_ID:?Missing repository variable VERCEL_PROJECT_ID}"
         env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          BETTER_AUTH_SECRET: ${{ secrets.BETTER_AUTH_SECRET }}
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-      - run: pnpm db:migrate
-        env:
-          APP_URL: https://tripstudio.cc
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          BETTER_AUTH_SECRET: ${{ secrets.BETTER_AUTH_SECRET }}
+          VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
       - name: Deploy Production
         id: deploy
         run: |
@@ -67,11 +58,11 @@ jobs:
           echo "url=$deployment_url" >> "$GITHUB_OUTPUT"
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+          VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
       - name: Promote Production Alias
         run: pnpm exec vercel alias set "${{ steps.deploy.outputs.url }}" tripstudio.cc --token="$VERCEL_TOKEN"
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+          VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}

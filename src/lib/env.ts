@@ -9,5 +9,13 @@ const serverEnvironment = z.object({
   DATABASE_URL: z.string().min(1).default('postgres://localhost/tripstudio'),
 })
 
-export const env = serverEnvironment.parse(process.env)
+const previewUrl =
+  process.env.TRIPSTUDIO_PR_PREVIEW === '1' && process.env.VERCEL_URL
+    ? `https://${process.env.VERCEL_URL}`
+    : undefined
+
+export const env = serverEnvironment.parse({
+  ...process.env,
+  APP_URL: previewUrl ?? process.env.APP_URL,
+})
 export const mcpResource = new URL('/mcp', env.APP_URL).toString()
