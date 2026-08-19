@@ -131,7 +131,8 @@ jobs:
           VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
       - name: Publish preview URL
-        run: echo "Web preview: $PREVIEW_URL" >> "$GITHUB_STEP_SUMMARY"
+        run: |
+          echo "Web preview: $PREVIEW_URL" >> "$GITHUB_STEP_SUMMARY"
         env:
           PREVIEW_URL: ${{ steps.deploy.outputs.url }}
 
