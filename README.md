@@ -7,7 +7,7 @@ document. TripStudio never books, changes, or cancels travel.
 ## Stack
 
 - TanStack Start on Vercel
-- PostgreSQL with Drizzle ORM
+- PostgreSQL with Drizzle ORM (managed instances use Neon)
 - Better Auth for browser sessions and MCP OAuth 2.1
 - Official MCP TypeScript SDK v2
 - shadcn/ui
@@ -38,6 +38,10 @@ Open `http://localhost:3000`, create an account, then connect an MCP client to
 environment has independent Postgres data and Better Auth secrets. Configure `APP_URL`,
 `DATABASE_URL`, and `BETTER_AUTH_SECRET` in Vercel's Preview and Production environments; mirror
 the database and auth secrets in the matching GitHub environments for migrations.
+
+The managed development and production databases are separate Neon projects in Frankfurt. Vercel
+Functions run in `fra1` to keep database traffic regional. Self-hosted installations can use any
+compatible PostgreSQL provider.
 
 ## Plugins
 
