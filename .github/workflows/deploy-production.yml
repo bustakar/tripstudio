@@ -18,12 +18,12 @@ jobs:
     env:
       DEPLOY_CONFIGURED: ${{ secrets.DATABASE_URL != '' && secrets.BETTER_AUTH_SECRET != '' && secrets.VERCEL_TOKEN != '' && secrets.VERCEL_ORG_ID != '' && secrets.VERCEL_PROJECT_ID != '' }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.10
         with:
           version: 11.12.0
           run_install: false
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: 24
           cache: pnpm
@@ -39,7 +39,7 @@ jobs:
         if: env.DEPLOY_CONFIGURED == 'true'
         id: deploy
         run: |
-          deployment_url=$(pnpm dlx vercel@latest deploy --archive=tgz --prod --skip-domain --token="$VERCEL_TOKEN")
+          deployment_url=$(pnpm exec vercel deploy --archive=tgz --prod --skip-domain --token="$VERCEL_TOKEN")
           echo "url=$deployment_url" >> "$GITHUB_OUTPUT"
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
@@ -47,7 +47,7 @@ jobs:
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
       - name: Promote Production Alias
         if: env.DEPLOY_CONFIGURED == 'true'
-        run: pnpm dlx vercel@latest alias set "${{ steps.deploy.outputs.url }}" tripstudio.cc --token="$VERCEL_TOKEN"
+        run: pnpm exec vercel alias set "${{ steps.deploy.outputs.url }}" tripstudio.cc --token="$VERCEL_TOKEN"
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}

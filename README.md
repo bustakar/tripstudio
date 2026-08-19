@@ -53,3 +53,8 @@ MCP endpoint. Their `plan-trip` skills intentionally remain identical.
 ```sh
 pnpm check
 ```
+
+## Contributing
+
+Issues and pull requests are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for the development
+workflow and [SECURITY.md](SECURITY.md) for reporting vulnerabilities privately.
