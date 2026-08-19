@@ -110,6 +110,8 @@ jobs:
           project_id: ${{ vars.NEON_PROJECT_ID }}
           branch_name: preview/pr-${{ github.event.pull_request.number }}
           api_key: ${{ secrets.NEON_API_KEY }}
+          database: tripstudio
+          role: tripstudio_owner
       - name: Mask Neon connection string
         run: echo "::add-mask::$DATABASE_URL"
         env:
