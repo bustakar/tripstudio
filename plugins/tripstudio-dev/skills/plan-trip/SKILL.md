@@ -1,6 +1,6 @@
 ---
 name: plan-trip
-description: Plan a trip naturally while keeping a private TripStudio project current. Use when the User wants to start, explore, resume, organize, or revise a trip.
+description: Plan a trip naturally while keeping a private Trip Studio project current. Use when the User wants to start, explore, resume, organize, or revise a trip.
 ---
 
 # Plan Trip

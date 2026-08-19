@@ -1,18 +1,17 @@
 import * as React from 'react'
-import { FolderKanban, Map, Plug, Settings2 } from 'lucide-react'
+import { Map, Plug, Settings2 } from 'lucide-react'
 
 import { NavMain } from '@/components/nav-main'
 import { NavProjects } from '@/components/nav-projects'
 import { NavUser } from '@/components/nav-user'
 import {
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
   Sidebar,
   SidebarContent,
   SidebarFooter,
   SidebarHeader,
-  SidebarRail,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
 } from '@/components/ui/sidebar'
 
 type AppSidebarProps = React.ComponentProps<typeof Sidebar> & {
@@ -22,7 +21,7 @@ type AppSidebarProps = React.ComponentProps<typeof Sidebar> & {
 
 export function AppSidebar({ projects, user, ...props }: AppSidebarProps) {
   return (
-    <Sidebar collapsible="icon" {...props}>
+    <Sidebar variant="inset" {...props}>
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
@@ -32,7 +31,7 @@ export function AppSidebar({ projects, user, ...props }: AppSidebarProps) {
                   <Map className="size-4" />
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-medium">TripStudio</span>
+                  <span className="truncate font-medium">Trip Studio</span>
                   <span className="truncate text-xs">Travel projects</span>
                 </div>
               </a>
@@ -43,7 +42,6 @@ export function AppSidebar({ projects, user, ...props }: AppSidebarProps) {
       <SidebarContent>
         <NavMain
           items={[
-            { title: 'Projects', url: '/', icon: FolderKanban },
             { title: 'Connect', url: '/connect', icon: Plug },
             { title: 'Settings', url: '/settings', icon: Settings2 },
           ]}
@@ -59,7 +57,6 @@ export function AppSidebar({ projects, user, ...props }: AppSidebarProps) {
       <SidebarFooter>
         <NavUser user={{ ...user, avatar: user.image ?? '' }} />
       </SidebarFooter>
-      <SidebarRail />
     </Sidebar>
   )
 }

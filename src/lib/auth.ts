@@ -9,7 +9,7 @@ import { env, mcpResource } from '@/lib/env'
 import { pool } from '@/lib/database'
 
 export const auth = betterAuth({
-  appName: 'TripStudio',
+  appName: 'Trip Studio',
   baseURL: env.APP_URL,
   secret: env.BETTER_AUTH_SECRET,
   database: pool,

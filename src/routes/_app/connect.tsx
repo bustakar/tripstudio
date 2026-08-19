@@ -27,7 +27,7 @@ function ConnectPage() {
       <div>
         <h1 className="text-2xl font-semibold">Connect</h1>
         <p className="text-sm text-muted-foreground">
-          Add TripStudio to an MCP-compatible agent.
+          Add Trip Studio to an MCP-compatible agent.
         </p>
       </div>
       <Card>

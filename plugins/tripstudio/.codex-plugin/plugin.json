@@ -3,22 +3,22 @@
   "version": "0.1.0",
   "description": "Explore a trip naturally and keep its evolving project current.",
   "author": {
-    "name": "TripStudio",
+    "name": "Trip Studio",
     "url": "https://github.com/bustakar/tripstudio"
   },
   "skills": "./skills/",
   "interface": {
-    "displayName": "TripStudio",
+    "displayName": "Trip Studio",
     "shortDescription": "Explore and shape trips naturally",
-    "longDescription": "TripStudio keeps a concise planning brief and validated structured trip project current across conversations. It never executes bookings.",
-    "developerName": "TripStudio",
+    "longDescription": "Trip Studio keeps a concise planning brief and validated structured trip project current across conversations. It never executes bookings.",
+    "developerName": "Trip Studio",
     "category": "Travel",
     "capabilities": [
       "Planning guidance",
       "Planning briefs",
       "Structured trip projects"
     ],
-    "defaultPrompt": "Help me plan a trip and keep my TripStudio project current."
+    "defaultPrompt": "Help me plan a trip and keep my Trip Studio project current."
   },
   "mcpServers": "./.mcp.json"
 }

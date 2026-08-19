@@ -1,8 +1,8 @@
-# TripStudio
+# Trip Studio
 
-TripStudio is an open-source structured workspace for travel-planning agents. The web app and MCP
+Trip Studio is an open-source structured workspace for travel-planning agents. The web app and MCP
 server share one domain service: a concise Markdown planning brief plus a validated structured trip
-document. TripStudio never books, changes, or cancels travel.
+document. Trip Studio never books, changes, or cancels travel.
 
 ## Stack
 

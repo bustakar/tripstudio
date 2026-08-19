@@ -1,4 +1,5 @@
 import type { LucideIcon } from 'lucide-react'
+
 import {
   SidebarGroup,
   SidebarGroupLabel,
@@ -10,11 +11,7 @@ import {
 export function NavMain({
   items,
 }: {
-  items: {
-    title: string
-    url: string
-    icon?: LucideIcon
-  }[]
+  items: { title: string; url: string; icon: LucideIcon }[]
 }) {
   return (
     <SidebarGroup>
@@ -22,9 +19,9 @@ export function NavMain({
       <SidebarMenu>
         {items.map((item) => (
           <SidebarMenuItem key={item.title}>
-            <SidebarMenuButton tooltip={item.title} asChild>
+            <SidebarMenuButton asChild tooltip={item.title}>
               <a href={item.url}>
-                {item.icon && <item.icon />}
+                <item.icon />
                 <span>{item.title}</span>
               </a>
             </SidebarMenuButton>

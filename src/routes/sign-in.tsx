@@ -50,7 +50,7 @@ function SignInPage() {
       <Card className="w-full max-w-sm">
         <CardHeader>
           <CardTitle>
-            {register ? 'Create your account' : 'Sign in to TripStudio'}
+            {register ? 'Create your account' : 'Sign in to Trip Studio'}
           </CardTitle>
           <CardDescription>
             {register

@@ -29,14 +29,14 @@ function createTripStudioServer(ownerId: string) {
     { name: 'tripstudio', version: '1.0.0' },
     {
       instructions:
-        "TripStudio stores the user's evolving planning brief and confirmed structured trip data. Read the current project before updating it and use its version for optimistic concurrency.",
+        "Trip Studio stores the user's evolving planning brief and confirmed structured trip data. Read the current project before updating it and use its version for optimistic concurrency.",
     },
   )
 
   server.registerTool(
     'list_trip_plans',
     {
-      description: "List the current user's TripStudio projects.",
+      description: "List the current user's Trip Studio projects.",
       inputSchema: z.object({}),
     },
     async () => toolResult({ plans: await tripPlanRepository.list(ownerId) }),

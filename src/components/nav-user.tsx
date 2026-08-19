@@ -1,5 +1,4 @@
 import { BadgeCheck, ChevronsUpDown, LogOut } from 'lucide-react'
-import { authClient } from '@/lib/auth-client'
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import {
@@ -17,15 +16,12 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from '@/components/ui/sidebar'
+import { authClient } from '@/lib/auth-client'
 
 export function NavUser({
   user,
 }: {
-  user: {
-    name: string
-    email: string
-    avatar: string
-  }
+  user: { name: string; email: string; avatar: string }
 }) {
   const { isMobile } = useSidebar()
   const initials = user.name

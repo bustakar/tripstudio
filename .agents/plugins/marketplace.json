@@ -1,7 +1,7 @@
 {
   "name": "tripstudio",
   "interface": {
-    "displayName": "TripStudio"
+    "displayName": "Trip Studio"
   },
   "plugins": [
     {

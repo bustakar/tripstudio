@@ -1,24 +1,24 @@
 {
   "name": "tripstudio-dev",
   "version": "0.1.0",
-  "description": "Development build of TripStudio.",
+  "description": "Development build of Trip Studio.",
   "author": {
-    "name": "TripStudio",
+    "name": "Trip Studio",
     "url": "https://github.com/bustakar/tripstudio"
   },
   "skills": "./skills/",
   "interface": {
-    "displayName": "TripStudio Dev",
-    "shortDescription": "Test TripStudio development",
-    "longDescription": "The development TripStudio plugin uses isolated development authentication, data and MCP infrastructure.",
-    "developerName": "TripStudio",
+    "displayName": "Trip Studio Dev",
+    "shortDescription": "Test Trip Studio development",
+    "longDescription": "The development Trip Studio plugin uses isolated development authentication, data and MCP infrastructure.",
+    "developerName": "Trip Studio",
     "category": "Travel",
     "capabilities": [
       "Planning guidance",
       "Planning briefs",
       "Structured trip projects"
     ],
-    "defaultPrompt": "Help me test a trip planning flow in TripStudio Dev."
+    "defaultPrompt": "Help me test a trip planning flow in Trip Studio Dev."
   },
   "mcpServers": "./.mcp.json"
 }

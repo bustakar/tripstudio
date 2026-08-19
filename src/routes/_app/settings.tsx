@@ -21,14 +21,14 @@ function SettingsPage() {
       <div>
         <h1 className="text-2xl font-semibold">Settings</h1>
         <p className="text-sm text-muted-foreground">
-          Your TripStudio account.
+          Your Trip Studio account.
         </p>
       </div>
       <Card>
         <CardHeader>
           <CardTitle>Account</CardTitle>
           <CardDescription>
-            Authentication is managed by TripStudio.
+            Authentication is managed by Trip Studio.
           </CardDescription>
         </CardHeader>
         <CardContent className="grid max-w-md gap-4">
@@ -38,7 +38,7 @@ function SettingsPage() {
           </div>
           <div className="grid gap-2">
             <Label>Email</Label>
-            <Input value={user.email} readOnly />
+            <Input value={user.email} disabled />
           </div>
         </CardContent>
       </Card>

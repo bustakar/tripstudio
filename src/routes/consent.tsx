@@ -32,7 +32,7 @@ function ConsentPage() {
         <CardHeader>
           <CardTitle>Connect this agent?</CardTitle>
           <CardDescription>
-            The agent will be able to read and update your TripStudio projects.
+            The agent will be able to read and update your Trip Studio projects.
             It cannot book or cancel travel.
           </CardDescription>
         </CardHeader>
