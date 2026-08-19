@@ -7,13 +7,16 @@ settings:
 overrides:
   rolldown: 1.1.0
 
+patchedDependencies:
+  '@better-auth/cimd@1.7.0': 869e461004dc636278fd4fed6166bf63c38452a0dbbebc30b42cdc5514ec2976
+
 importers:
 
   .:
     dependencies:
       '@better-auth/cimd':
         specifier: ^1.7.0
-        version: 1.7.0(c5752cecb1216e2961c13c421e7d8adc)
+        version: 1.7.0(patch_hash=869e461004dc636278fd4fed6166bf63c38452a0dbbebc30b42cdc5514ec2976)(c5752cecb1216e2961c13c421e7d8adc)
       '@better-auth/mcp':
         specifier: ^1.7.0
         version: 1.7.0(@better-auth/core@1.7.0(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-call@1.4.0(zod@4.4.3))(jose@6.2.9)(kysely@0.29.5)(nanostores@1.5.1))(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-auth@1.7.0(@tanstack/react-start@1.168.47(crossws@0.4.10(srvx@0.11.22))(esbuild@0.28.2)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(rolldown@1.1.0)(rollup@4.62.4)(vite@8.1.5(@types/node@22.20.1)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.12)))(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@types/pg@8.23.1)(kysely@0.29.5)(pg@8.23.0))(pg@8.23.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(solid-js@1.9.15)(vitest@4.1.10))(better-call@1.4.0(zod@4.4.3))
@@ -5927,7 +5930,7 @@ snapshots:
 
   '@bcoe/v8-coverage@1.0.2': {}
 
-  '@better-auth/cimd@1.7.0(c5752cecb1216e2961c13c421e7d8adc)':
+  '@better-auth/cimd@1.7.0(patch_hash=869e461004dc636278fd4fed6166bf63c38452a0dbbebc30b42cdc5514ec2976)(c5752cecb1216e2961c13c421e7d8adc)':
     dependencies:
       '@better-auth/core': 1.7.0(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-call@1.4.0(zod@4.4.3))(jose@6.2.9)(kysely@0.29.5)(nanostores@1.5.1)
       '@better-auth/oauth-provider': 1.7.0(@better-auth/core@1.7.0(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-call@1.4.0(zod@4.4.3))(jose@6.2.9)(kysely@0.29.5)(nanostores@1.5.1))(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-auth@1.7.0(@tanstack/react-start@1.168.47(crossws@0.4.10(srvx@0.11.22))(esbuild@0.28.2)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(rolldown@1.1.0)(rollup@4.62.4)(vite@8.1.5(@types/node@22.20.1)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.12)))(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@types/pg@8.23.1)(kysely@0.29.5)(pg@8.23.0))(pg@8.23.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(solid-js@1.9.15)(vitest@4.1.10))(better-call@1.4.0(zod@4.4.3))
