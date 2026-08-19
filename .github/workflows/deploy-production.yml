@@ -61,8 +61,16 @@ jobs:
           VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
       - name: Promote Production Alias
-        run: pnpm exec vercel alias set "${{ steps.deploy.outputs.url }}" tripstudio.cc --token="$VERCEL_TOKEN"
+        run: |
+          deployment_host=${DEPLOYMENT_URL#https://}
+          curl --fail --silent --show-error \
+            --request POST \
+            --header "Authorization: Bearer $VERCEL_TOKEN" \
+            --header "Content-Type: application/json" \
+            --data '{"alias":"tripstudio.cc"}' \
+            "https://api.vercel.com/v2/deployments/$deployment_host/aliases?teamId=$VERCEL_ORG_ID" \
+            >/dev/null
         env:
+          DEPLOYMENT_URL: ${{ steps.deploy.outputs.url }}
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
