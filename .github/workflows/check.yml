@@ -110,6 +110,10 @@ jobs:
           project_id: ${{ vars.NEON_PROJECT_ID }}
           branch_name: preview/pr-${{ github.event.pull_request.number }}
           api_key: ${{ secrets.NEON_API_KEY }}
+      - name: Mask Neon connection string
+        run: echo "::add-mask::$DATABASE_URL"
+        env:
+          DATABASE_URL: ${{ steps.neon.outputs.db_url_pooled }}
       - name: Deploy Preview
         id: deploy
         run: |
