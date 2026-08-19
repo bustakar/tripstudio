@@ -35,8 +35,19 @@ jobs:
           APP_URL: https://tripstudio.cc
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           BETTER_AUTH_SECRET: ${{ secrets.BETTER_AUTH_SECRET }}
-      - run: pnpm dlx vercel@latest deploy --archive=tgz --prod --token="$VERCEL_TOKEN"
+      - name: Deploy Production
         if: env.DEPLOY_CONFIGURED == 'true'
+        id: deploy
+        run: |
+          deployment_url=$(pnpm dlx vercel@latest deploy --archive=tgz --prod --skip-domain --token="$VERCEL_TOKEN")
+          echo "url=$deployment_url" >> "$GITHUB_OUTPUT"
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+      - name: Promote Production Alias
+        if: env.DEPLOY_CONFIGURED == 'true'
+        run: pnpm dlx vercel@latest alias set "${{ steps.deploy.outputs.url }}" tripstudio.cc --token="$VERCEL_TOKEN"
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
