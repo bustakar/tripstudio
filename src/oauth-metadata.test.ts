@@ -1,9 +1,28 @@
 import { z } from 'zod'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 
 import { env } from '@/lib/env'
 import { handleOAuthAuthorizationServerMetadata } from '@/routes/[.]well-known/oauth-authorization-server/api/auth'
 import { handleMcpRequest } from '@/server/mcp'
+
+vi.mock('@/lib/auth', () => {
+  const appUrl = process.env.APP_URL ?? 'http://localhost:3000'
+  const issuer = new URL('/api/auth', appUrl).toString()
+
+  return {
+    auth: {
+      $context: Promise.resolve({ baseURL: issuer, internalAdapter: {} }),
+      api: {
+        getOAuthServerConfig: async () => ({
+          issuer,
+          client_id_metadata_document_supported: true,
+          token_endpoint_auth_methods_supported: ['none'],
+          code_challenge_methods_supported: ['S256'],
+        }),
+      },
+    },
+  }
+})
 
 const metadataSchema = z.object({
   issuer: z.url(),

@@ -1,14 +1,23 @@
 import { describe, expect, it } from 'vitest'
 
-import { postAuthRedirect } from '@/lib/post-auth-redirect'
+import {
+  oauthAuthorizationRedirect,
+  postAuthRedirect,
+} from '@/lib/post-auth-redirect'
 
 describe('post-auth redirect', () => {
   it('resumes a signed OAuth authorization request', () => {
     expect(
-      postAuthRedirect('?client_id=codex&scope=mcp%3Atools&sig=signed'),
+      oauthAuthorizationRedirect(
+        '?client_id=codex&scope=mcp%3Atools&sig=signed',
+        'https://tripstudio.example',
+      )?.toString(),
     ).toBe(
-      '/api/auth/oauth2/authorize?client_id=codex&scope=mcp%3Atools&sig=signed',
+      'https://tripstudio.example/api/auth/oauth2/authorize?client_id=codex&scope=mcp%3Atools&sig=signed',
     )
+    expect(
+      oauthAuthorizationRedirect('?client_id=codex', 'https://example.com'),
+    ).toBeNull()
   })
 
   it('accepts local redirects without allowing protocol-relative URLs', () => {
