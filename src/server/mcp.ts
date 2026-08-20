@@ -6,6 +6,11 @@ import {
   createTripPlanInputSchema,
   updateTripPlanInputSchema,
 } from '@/domain/trip-plan'
+import {
+  applyTripPlanChanges,
+  applyTripPlanChangesInputSchema,
+} from '@/domain/trip-plan-changes'
+import { buildTripPlanView } from '@/domain/trip-plan-view'
 import { auth } from '@/lib/auth'
 import { mcpResource } from '@/lib/env'
 import { tripPlanRepository } from '@/server/postgres-trip-plan-repository'
@@ -24,12 +29,19 @@ function toolResult(value: unknown) {
   }
 }
 
+function agentPlan<
+  T extends { document: Parameters<typeof buildTripPlanView>[0] },
+>(plan: T) {
+  const { document, ...project } = plan
+  return { ...project, trip: buildTripPlanView(document) }
+}
+
 function createTripStudioServer(ownerId: string) {
   const server = new McpServer(
     { name: 'tripstudio', version: '1.0.0' },
     {
       instructions:
-        "Trip Studio stores the user's evolving planning brief and confirmed structured trip data. Read the current project before updating it and use its version for optimistic concurrency.",
+        "Trip Studio stores the user's evolving planning brief and confirmed structured trip data. Read the current project before updating it, use its version for optimistic concurrency, and prefer apply_trip_plan_changes for structured edits.",
     },
   )
 
@@ -52,7 +64,7 @@ function createTripStudioServer(ownerId: string) {
     async ({ id }) => {
       const plan = await tripPlanRepository.get(ownerId, id)
       return plan
-        ? toolResult({ plan })
+        ? toolResult({ plan: agentPlan(plan) })
         : {
             isError: true,
             content: [{ type: 'text', text: 'Project not found' }],
@@ -68,17 +80,50 @@ function createTripStudioServer(ownerId: string) {
       inputSchema: createTripPlanInputSchema,
     },
     async (input) =>
-      toolResult({ plan: await tripPlanRepository.create(ownerId, input) }),
+      toolResult({
+        plan: agentPlan(await tripPlanRepository.create(ownerId, input)),
+      }),
   )
 
   server.registerTool(
     'update_trip_plan',
     {
-      description: 'Atomically update one current project version.',
+      description:
+        'Update project metadata or replace the complete advanced document. Prefer apply_trip_plan_changes for ordinary structured edits.',
       inputSchema: updateTripPlanInputSchema,
     },
     async (input) =>
-      toolResult({ plan: await tripPlanRepository.update(ownerId, input) }),
+      toolResult({
+        plan: agentPlan(await tripPlanRepository.update(ownerId, input)),
+      }),
+  )
+
+  server.registerTool(
+    'apply_trip_plan_changes',
+    {
+      description:
+        'Atomically put or remove individual trip entities in one current project version.',
+      inputSchema: applyTripPlanChangesInputSchema,
+    },
+    async ({ id, expectedVersion, planningBrief, changes }) => {
+      const plan = await tripPlanRepository.get(ownerId, id)
+      if (!plan)
+        return {
+          isError: true,
+          content: [{ type: 'text', text: 'Project not found' }],
+        }
+
+      return toolResult({
+        plan: agentPlan(
+          await tripPlanRepository.update(ownerId, {
+            id,
+            expectedVersion,
+            planningBrief,
+            document: applyTripPlanChanges(plan.document, changes),
+          }),
+        ),
+      })
+    },
   )
 
   return server
