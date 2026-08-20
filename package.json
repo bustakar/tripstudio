@@ -18,7 +18,7 @@
     "check:server-output": "for output_dir in .output/server .vercel/output/functions; do if test -d \"$output_dir\"; then find \"$output_dir\" -type f -name '*.mjs' -exec node --check {} \\;; fi; done",
     "db:generate": "drizzle-kit generate && auth generate --config src/lib/auth.ts --output drizzle/auth.sql --yes",
     "db:migrate": "drizzle-kit migrate && auth migrate --config src/lib/auth.ts --yes",
-    "db:migrate-trip-documents": "tsx src/server/migrate-trip-plan-documents.ts",
+    "db:migrate-trip-documents": "tsx --env-file-if-exists=.env.local src/server/migrate-trip-plan-documents.ts",
     "check": "pnpm generate-routes && prettier --check . && eslint . && pnpm typecheck && pnpm test && pnpm build"
   },
   "dependencies": {
