@@ -4,6 +4,7 @@ export const planningBriefMaxLength = 12_000
 
 const nonEmptyText = z.string().trim().min(1)
 const entityId = nonEmptyText
+const legacyId = z.string()
 const date = z.iso.date()
 // Planning often starts with values such as "morning" before an exact time exists.
 const time = nonEmptyText
@@ -336,10 +337,16 @@ export type DayItem = TripDay['items'][number]
 
 export const tripPlanDocumentV1Schema = z.object({
   schemaVersion: z.literal(1),
-  travelers: z.array(travelerSchema),
+  travelers: z.array(
+    z.object({
+      id: legacyId,
+      name: nonEmptyText,
+      notes: z.string().optional(),
+    }),
+  ),
   destinations: z.array(
     z.object({
-      id: entityId,
+      id: legacyId,
       name: nonEmptyText,
       country: z.string().optional(),
       notes: z.string().optional(),
@@ -350,7 +357,7 @@ export const tripPlanDocumentV1Schema = z.object({
       date,
       items: z.array(
         z.object({
-          id: entityId,
+          id: legacyId,
           title: nonEmptyText,
           place: z.string().optional(),
           startTime: z.string().optional(),
@@ -361,7 +368,7 @@ export const tripPlanDocumentV1Schema = z.object({
   ),
   bookings: z.array(
     z.object({
-      id: entityId,
+      id: legacyId,
       kind: bookingKindSchema,
       title: nonEmptyText,
       status: bookingStatusSchema,
@@ -369,32 +376,53 @@ export const tripPlanDocumentV1Schema = z.object({
       notes: z.string().optional(),
     }),
   ),
-  constraints: z.array(constraintSchema),
-  decisions: z.array(decisionSchema),
-  sources: z.array(sourceSchema),
+  constraints: z.array(z.object({ id: legacyId, text: nonEmptyText })),
+  decisions: z.array(z.object({ id: legacyId, text: nonEmptyText })),
+  sources: z.array(
+    z.object({
+      id: legacyId,
+      title: nonEmptyText,
+      url: z.string().url().optional(),
+    }),
+  ),
 })
 
 export type TripPlanDocumentV1 = z.infer<typeof tripPlanDocumentV1Schema>
 export type StoredTripPlanDocument = TripPlanDocumentV1 | TripPlanDocument
 
-function uniqueIds<T extends { id: string }>(values: T[]) {
-  const reserved = new Set(values.map(({ id }) => id))
+function uniqueIds<T extends { id: string }>(values: T[], prefix: string) {
+  const reserved = new Set(
+    values.flatMap(({ id }) => (id.trim() ? [id.trim()] : [])),
+  )
   const used = new Set<string>()
   const occurrences = new Map<string, number>()
 
-  return values.map((value) => {
-    if (!used.has(value.id)) {
-      used.add(value.id)
-      return value
+  return values.map((value, index) => {
+    const originalId = value.id.trim()
+    if (!originalId) {
+      const base = `migrated-${prefix}-${index + 1}`
+      let candidate = base
+      let occurrence = 2
+      while (used.has(candidate) || reserved.has(candidate)) {
+        candidate = `${base}-${occurrence}`
+        occurrence += 1
+      }
+      used.add(candidate)
+      return { ...value, id: candidate }
     }
 
-    let occurrence = occurrences.get(value.id) ?? 2
-    let candidate = `${value.id}-migrated-${occurrence}`
+    if (!used.has(originalId)) {
+      used.add(originalId)
+      return originalId === value.id ? value : { ...value, id: originalId }
+    }
+
+    let occurrence = occurrences.get(originalId) ?? 2
+    let candidate = `${originalId}-migrated-${occurrence}`
     while (used.has(candidate) || reserved.has(candidate)) {
       occurrence += 1
-      candidate = `${value.id}-migrated-${occurrence}`
+      candidate = `${originalId}-migrated-${occurrence}`
     }
-    occurrences.set(value.id, occurrence + 1)
+    occurrences.set(originalId, occurrence + 1)
     used.add(candidate)
     return { ...value, id: candidate }
   })
@@ -425,7 +453,7 @@ export function migrateTripPlanDocumentV1(
   input: TripPlanDocumentV1,
 ): TripPlanDocument {
   const document = tripPlanDocumentV1Schema.parse(input)
-  const stops = uniqueIds(document.destinations).map(
+  const stops = uniqueIds(document.destinations, 'stop').map(
     (destination, position) => ({
       ...destination,
       position,
@@ -434,11 +462,12 @@ export function migrateTripPlanDocumentV1(
   )
   const uniqueItemIds = uniqueIds(
     document.itinerary.flatMap(({ items }) => items),
+    'activity',
   )[Symbol.iterator]()
 
   return tripPlanDocumentSchema.parse({
     schemaVersion: 2,
-    travelers: uniqueIds(document.travelers),
+    travelers: uniqueIds(document.travelers, 'traveler'),
     stops,
     days: document.itinerary.map((day, index) => ({
       id: `migrated-day-${index + 1}-${day.date}`,
@@ -461,10 +490,10 @@ export function migrateTripPlanDocumentV1(
     })),
     stays: [],
     transports: [],
-    bookings: uniqueIds(document.bookings),
-    sources: uniqueIds(document.sources),
-    constraints: uniqueIds(document.constraints),
-    decisions: uniqueIds(document.decisions),
+    bookings: uniqueIds(document.bookings, 'booking'),
+    sources: uniqueIds(document.sources, 'source'),
+    constraints: uniqueIds(document.constraints, 'constraint'),
+    decisions: uniqueIds(document.decisions, 'decision'),
   })
 }
 

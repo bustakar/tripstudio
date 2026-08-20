@@ -198,6 +198,43 @@ describe('Trip Plan contract', () => {
     expect(migrated.days[1]?.items[0]).not.toHaveProperty('startTime')
   })
 
+  it('repairs blank IDs accepted by the legacy schema', () => {
+    const migrated = migrateTripPlanDocumentV1({
+      schemaVersion: 1,
+      travelers: [{ id: '', name: 'Karel' }],
+      destinations: [{ id: ' ', name: 'Tokyo' }],
+      itinerary: [
+        {
+          date: '2026-11-03',
+          items: [{ id: '', title: 'Tokyo walk', place: 'Tokyo' }],
+        },
+      ],
+      bookings: [
+        {
+          id: ' ',
+          kind: 'stay',
+          title: 'Tokyo hotel',
+          status: 'confirmed',
+        },
+      ],
+      sources: [{ id: '', title: 'Tokyo guide' }],
+      constraints: [{ id: ' ', text: 'Keep mornings relaxed' }],
+      decisions: [{ id: '', text: 'Start in Tokyo' }],
+    })
+
+    const ids = [
+      ...migrated.travelers,
+      ...migrated.stops,
+      ...migrated.days.flatMap(({ items }) => items),
+      ...migrated.bookings,
+      ...migrated.sources,
+      ...migrated.constraints,
+      ...migrated.decisions,
+    ].map(({ id }) => id)
+    expect(ids.every((id) => id.trim().length > 0)).toBe(true)
+    expect(migrated.days[0]?.stopId).toBe(migrated.stops[0]?.id)
+  })
+
   it('rejects dangling v2 relationships', () => {
     expect(() =>
       tripPlanDocumentSchema.parse({
