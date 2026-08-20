@@ -377,14 +377,37 @@ export const tripPlanDocumentV1Schema = z.object({
 export type TripPlanDocumentV1 = z.infer<typeof tripPlanDocumentV1Schema>
 export type StoredTripPlanDocument = TripPlanDocumentV1 | TripPlanDocument
 
+function uniqueIds<T extends { id: string }>(values: T[]) {
+  const reserved = new Set(values.map(({ id }) => id))
+  const used = new Set<string>()
+  const occurrences = new Map<string, number>()
+
+  return values.map((value) => {
+    if (!used.has(value.id)) {
+      used.add(value.id)
+      return value
+    }
+
+    let occurrence = occurrences.get(value.id) ?? 2
+    let candidate = `${value.id}-migrated-${occurrence}`
+    while (used.has(candidate) || reserved.has(candidate)) {
+      occurrence += 1
+      candidate = `${value.id}-migrated-${occurrence}`
+    }
+    occurrences.set(value.id, occurrence + 1)
+    used.add(candidate)
+    return { ...value, id: candidate }
+  })
+}
+
 function matchingStopId(
-  document: TripPlanDocumentV1,
+  stops: TripPlanDocument['stops'],
   day: TripPlanDocumentV1['itinerary'][number],
 ) {
   const stopsByName = new Map<string, string | null>()
-  for (const destination of document.destinations) {
-    const name = destination.name.trim().toLocaleLowerCase()
-    stopsByName.set(name, stopsByName.has(name) ? null : destination.id)
+  for (const stop of stops) {
+    const name = stop.name.trim().toLocaleLowerCase()
+    stopsByName.set(name, stopsByName.has(name) ? null : stop.id)
   }
 
   const places = day.items.flatMap(({ place }) =>
@@ -402,33 +425,46 @@ export function migrateTripPlanDocumentV1(
   input: TripPlanDocumentV1,
 ): TripPlanDocument {
   const document = tripPlanDocumentV1Schema.parse(input)
-  return tripPlanDocumentSchema.parse({
-    schemaVersion: 2,
-    travelers: document.travelers,
-    stops: document.destinations.map((destination, position) => ({
+  const stops = uniqueIds(document.destinations).map(
+    (destination, position) => ({
       ...destination,
       position,
       sourceIds: [],
-    })),
+    }),
+  )
+  const uniqueItemIds = uniqueIds(
+    document.itinerary.flatMap(({ items }) => items),
+  )[Symbol.iterator]()
+
+  return tripPlanDocumentSchema.parse({
+    schemaVersion: 2,
+    travelers: uniqueIds(document.travelers),
+    stops,
     days: document.itinerary.map((day, index) => ({
       id: `migrated-day-${index + 1}-${day.date}`,
-      stopId: matchingStopId(document, day),
+      stopId: matchingStopId(stops, day),
       date: day.date,
-      items: day.items.map((item) => ({
-        ...item,
-        kind: 'activity' as const,
-        bookingIds: [],
-        sourceIds: [],
-      })),
+      items: day.items.map(() => {
+        const migrated = uniqueItemIds.next().value
+        if (!migrated) throw new Error('Missing migrated itinerary item')
+        const { startTime, ...fields } = migrated
+        return {
+          ...fields,
+          ...(startTime?.trim() ? { startTime } : {}),
+          kind: 'activity' as const,
+          bookingIds: [],
+          sourceIds: [],
+        }
+      }),
       bookingIds: [],
       sourceIds: [],
     })),
     stays: [],
     transports: [],
-    bookings: document.bookings,
-    sources: document.sources,
-    constraints: document.constraints,
-    decisions: document.decisions,
+    bookings: uniqueIds(document.bookings),
+    sources: uniqueIds(document.sources),
+    constraints: uniqueIds(document.constraints),
+    decisions: uniqueIds(document.decisions),
   })
 }
 

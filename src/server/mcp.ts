@@ -11,6 +11,7 @@ import {
   applyTripPlanChangesInputSchema,
 } from '@/domain/trip-plan-changes'
 import { buildTripPlanView } from '@/domain/trip-plan-view'
+import { VersionConflictError } from '@/domain/trip-plan-repository'
 import { auth } from '@/lib/auth'
 import { mcpResource } from '@/lib/env'
 import { tripPlanRepository } from '@/server/postgres-trip-plan-repository'
@@ -112,6 +113,7 @@ function createTripStudioServer(ownerId: string) {
           isError: true,
           content: [{ type: 'text', text: 'Project not found' }],
         }
+      if (plan.version !== expectedVersion) throw new VersionConflictError()
 
       return toolResult({
         plan: agentPlan(

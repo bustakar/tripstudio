@@ -71,7 +71,7 @@ export function buildTripPlanView(document: TripPlanDocument) {
       .filter((day) => day.stopId === stop.id)
       .sort((left, right) => left.date.localeCompare(right.date))
       .map(resolveDay),
-    transportsToNext: document.transports
+    outboundTransports: document.transports
       .filter((transport) => transport.fromStopId === stop.id)
       .map(resolveTransport),
   }))
@@ -84,15 +84,20 @@ export function buildTripPlanView(document: TripPlanDocument) {
     .filter((transport) => !transport.fromStopId)
     .map(resolveTransport)
 
+  const unassignedStays = document.stays
+    .filter((stay) => !linkedStayIds.has(stay.id))
+    .flatMap(({ id }) => {
+      const stay = resolveStay(id)
+      return stay ? [stay] : []
+    })
+
   return {
     schemaVersion: document.schemaVersion,
     travelers: document.travelers,
     stops,
     unassignedDays,
     unassignedTransports,
-    unassignedStays: document.stays.filter(
-      (stay) => !linkedStayIds.has(stay.id),
-    ),
+    unassignedStays,
     unlinkedBookings: document.bookings.filter(
       (booking) => !linkedBookingIds.has(booking.id),
     ),

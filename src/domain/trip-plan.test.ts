@@ -126,6 +126,78 @@ describe('Trip Plan contract', () => {
     })
   })
 
+  it('retains legacy entities whose IDs were not unique', () => {
+    const migrated = migrateTripPlanDocumentV1({
+      schemaVersion: 1,
+      travelers: [
+        { id: 'traveler', name: 'Karel' },
+        { id: 'traveler', name: 'Nikki' },
+      ],
+      destinations: [
+        { id: 'stop', name: 'Tokyo' },
+        { id: 'stop', name: 'Kyoto' },
+      ],
+      itinerary: [
+        {
+          date: '2026-11-03',
+          items: [{ id: 'activity', title: 'Tokyo walk', place: 'Tokyo' }],
+        },
+        {
+          date: '2026-11-04',
+          items: [
+            {
+              id: 'activity',
+              title: 'Kyoto walk',
+              place: 'Kyoto',
+              startTime: '',
+            },
+          ],
+        },
+      ],
+      bookings: [
+        {
+          id: 'booking',
+          kind: 'stay',
+          title: 'Tokyo hotel',
+          status: 'confirmed',
+        },
+        {
+          id: 'booking',
+          kind: 'stay',
+          title: 'Kyoto hotel',
+          status: 'confirmed',
+        },
+      ],
+      sources: [
+        { id: 'source', title: 'Tokyo guide' },
+        { id: 'source', title: 'Kyoto guide' },
+      ],
+      constraints: [
+        { id: 'constraint', text: 'One' },
+        { id: 'constraint', text: 'Two' },
+      ],
+      decisions: [
+        { id: 'decision', text: 'One' },
+        { id: 'decision', text: 'Two' },
+      ],
+    })
+
+    expect(new Set(migrated.travelers.map(({ id }) => id)).size).toBe(2)
+    expect(new Set(migrated.stops.map(({ id }) => id)).size).toBe(2)
+    expect(
+      new Set(migrated.days.flatMap(({ items }) => items.map(({ id }) => id)))
+        .size,
+    ).toBe(2)
+    expect(new Set(migrated.bookings.map(({ id }) => id)).size).toBe(2)
+    expect(new Set(migrated.sources.map(({ id }) => id)).size).toBe(2)
+    expect(new Set(migrated.constraints.map(({ id }) => id)).size).toBe(2)
+    expect(new Set(migrated.decisions.map(({ id }) => id)).size).toBe(2)
+    expect(migrated.days.map(({ stopId }) => stopId)).toEqual(
+      migrated.stops.map(({ id }) => id),
+    )
+    expect(migrated.days[1]?.items[0]).not.toHaveProperty('startTime')
+  })
+
   it('rejects dangling v2 relationships', () => {
     expect(() =>
       tripPlanDocumentSchema.parse({
