@@ -3,6 +3,7 @@ import { z } from 'zod'
 
 import {
   createTripPlanInputSchema,
+  restoreTripPlanRevisionInputSchema,
   updateTripPlanInputSchema,
 } from '@/domain/trip-plan'
 import { requireSession } from '@/lib/auth-functions'
@@ -34,4 +35,18 @@ export const updateTripPlan = createServerFn({ method: 'POST' })
   .handler(async ({ data }) => {
     const session = await requireSession()
     return tripPlanRepository.update(session.user.id, data)
+  })
+
+export const listTripPlanRevisions = createServerFn({ method: 'GET' })
+  .validator(z.object({ id: z.uuid() }))
+  .handler(async ({ data }) => {
+    const session = await requireSession()
+    return tripPlanRepository.listRevisions(session.user.id, data.id)
+  })
+
+export const restoreTripPlanRevision = createServerFn({ method: 'POST' })
+  .validator(restoreTripPlanRevisionInputSchema)
+  .handler(async ({ data }) => {
+    const session = await requireSession()
+    return tripPlanRepository.restoreRevision(session.user.id, data)
   })

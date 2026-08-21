@@ -9,6 +9,7 @@ const date = z.iso.date()
 // Planning often starts with values such as "morning" before an exact time exists.
 const time = nonEmptyText
 const ids = z.array(entityId)
+const tripPlanStatusSchema = z.enum(['active', 'archived'])
 
 export const travelerSchema = z.object({
   id: entityId,
@@ -505,6 +506,22 @@ export function normalizeTripPlanDocument(input: unknown): TripPlanDocument {
   throw new Error(`Unsupported trip document version ${version.schemaVersion}`)
 }
 
+const tripPlanDocumentInputSchema = z.union([
+  tripPlanDocumentSchema,
+  tripPlanDocumentV1Schema,
+])
+
+export const tripPlanSnapshotSchema = z.object({
+  title: nonEmptyText.max(160),
+  startDate: date.nullable(),
+  endDate: date.nullable(),
+  status: tripPlanStatusSchema,
+  planningBrief: z.string().max(planningBriefMaxLength),
+  document: tripPlanDocumentInputSchema,
+})
+
+export type TripPlanSnapshot = z.infer<typeof tripPlanSnapshotSchema>
+
 export const emptyTripPlanDocument = (): TripPlanDocument => ({
   schemaVersion: 2,
   travelers: [],
@@ -517,11 +534,6 @@ export const emptyTripPlanDocument = (): TripPlanDocument => ({
   constraints: [],
   decisions: [],
 })
-
-const tripPlanDocumentInputSchema = z.union([
-  tripPlanDocumentSchema,
-  tripPlanDocumentV1Schema,
-])
 
 export const createTripPlanInputSchema = z.object({
   title: nonEmptyText.max(160),
@@ -539,7 +551,7 @@ export const updateTripPlanInputSchema = z
     planningBrief: z.string().max(planningBriefMaxLength).optional(),
     startDate: date.nullable().optional(),
     endDate: date.nullable().optional(),
-    status: z.enum(['active', 'archived']).optional(),
+    status: tripPlanStatusSchema.optional(),
     document: tripPlanDocumentInputSchema.optional(),
   })
   .refine(
@@ -550,3 +562,13 @@ export const updateTripPlanInputSchema = z
 
 export type CreateTripPlanInput = z.infer<typeof createTripPlanInputSchema>
 export type UpdateTripPlanInput = z.infer<typeof updateTripPlanInputSchema>
+
+export const restoreTripPlanRevisionInputSchema = z.object({
+  id: z.uuid(),
+  expectedVersion: z.number().int().positive(),
+  revisionVersion: z.number().int().positive(),
+})
+
+export type RestoreTripPlanRevisionInput = z.infer<
+  typeof restoreTripPlanRevisionInputSchema
+>

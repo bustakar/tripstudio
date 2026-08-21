@@ -13,6 +13,7 @@ import type {
   StoredTripPlanDocument,
   TripPlanDocument,
   TripPlanDocumentV1,
+  TripPlanSnapshot,
 } from '@/domain/trip-plan'
 
 export const tripPlans = pgTable(
@@ -64,3 +65,26 @@ export type StoredTripPlanRow = typeof tripPlans.$inferSelect
 export type TripPlanRow = Omit<StoredTripPlanRow, 'document'> & {
   document: TripPlanDocument
 }
+
+export const tripPlanRevisions = pgTable(
+  'trip_plan_revisions',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    tripPlanId: uuid('trip_plan_id')
+      .notNull()
+      .references(() => tripPlans.id, { onDelete: 'cascade' }),
+    version: integer('version').notNull(),
+    snapshot: jsonb('snapshot').$type<TripPlanSnapshot>().notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    uniqueIndex('trip_plan_revisions_plan_version_idx').on(
+      table.tripPlanId,
+      table.version,
+    ),
+  ],
+)
+
+export type TripPlanRevisionRow = typeof tripPlanRevisions.$inferSelect

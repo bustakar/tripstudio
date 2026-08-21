@@ -4,6 +4,7 @@ import { z } from 'zod'
 
 import {
   createTripPlanInputSchema,
+  restoreTripPlanRevisionInputSchema,
   updateTripPlanInputSchema,
 } from '@/domain/trip-plan'
 import {
@@ -126,6 +127,34 @@ function createTripStudioServer(ownerId: string) {
         ),
       })
     },
+  )
+
+  server.registerTool(
+    'list_trip_plan_revisions',
+    {
+      description:
+        'List every saved version of one project, newest first, including complete snapshots.',
+      inputSchema: z.object({ id: z.uuid() }),
+    },
+    async ({ id }) =>
+      toolResult({
+        revisions: await tripPlanRepository.listRevisions(ownerId, id),
+      }),
+  )
+
+  server.registerTool(
+    'restore_trip_plan_revision',
+    {
+      description:
+        'Restore a saved project version as a new current version without deleting later history.',
+      inputSchema: restoreTripPlanRevisionInputSchema,
+    },
+    async (input) =>
+      toolResult({
+        plan: agentPlan(
+          await tripPlanRepository.restoreRevision(ownerId, input),
+        ),
+      }),
   )
 
   return server
