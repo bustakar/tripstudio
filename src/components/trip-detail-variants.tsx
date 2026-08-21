@@ -76,6 +76,11 @@ function formatTimeRange(startTime?: string, endTime?: string) {
   return 'Anytime'
 }
 
+function nonBlank(value?: string) {
+  const trimmed = value?.trim()
+  return trimmed || undefined
+}
+
 function BookingDetails({ bookings }: { bookings: Booking[] }) {
   if (bookings.length === 0) return null
   return (
@@ -190,11 +195,18 @@ function DayCard({ day }: { day: DayView }) {
                 </div>
                 <div className="grid gap-2">
                   <div>
-                    <p className="text-sm font-medium">
-                      {item.kind === 'activity'
-                        ? item.title
-                        : item.title || item.mode || 'Local transport'}
-                    </p>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="text-sm font-medium">
+                        {item.kind === 'activity'
+                          ? item.title
+                          : item.title || item.mode || 'Local transport'}
+                      </p>
+                      {item.kind === 'transport' && item.title && item.mode && (
+                        <Badge className="capitalize" variant="outline">
+                          {item.mode}
+                        </Badge>
+                      )}
+                    </div>
                     {item.kind === 'activity' && item.place && (
                       <p className="text-sm text-muted-foreground">
                         {item.place}
@@ -262,10 +274,10 @@ function TransportRow({
   embedded?: boolean
 }) {
   const from =
-    transport.from ??
+    nonBlank(transport.from) ??
     (transport.fromStopId ? stopNames.get(transport.fromStopId) : undefined)
   const to =
-    transport.to ??
+    nonBlank(transport.to) ??
     (transport.toStopId ? stopNames.get(transport.toStopId) : undefined)
   const schedule = [
     transport.date ? formatDate(transport.date) : undefined,

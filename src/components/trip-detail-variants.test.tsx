@@ -12,22 +12,32 @@ describe('TripDetail', () => {
   it('keeps supported linked and unassigned details visible', () => {
     const document: TripPlanDocument = {
       ...completePreviewTrip.document,
+      days: completePreviewTrip.document.days.map((day) => ({
+        ...day,
+        items: day.items.map((item) =>
+          item.id === 'transport-taxi'
+            ? { ...item, title: 'Airport transfer' }
+            : item,
+        ),
+      })),
       transports: completePreviewTrip.document.transports.map(
         (transport): TripPlanDocument['transports'][number] =>
-          transport.id === 'route-unassigned'
-            ? {
-                ...transport,
-                mode: 'ferry',
-                from: 'Pier 1',
-                to: 'Island harbor',
-                date: '2026-11-17',
-                startTime: '16:00',
-                endTime: '17:00',
-                notes: 'Boarding closes early.',
-                bookingIds: ['booking-unlinked'],
-                sourceIds: ['source-unlinked'],
-              }
-            : transport,
+          transport.id === 'route-train'
+            ? { ...transport, from: '   ' }
+            : transport.id === 'route-unassigned'
+              ? {
+                  ...transport,
+                  mode: 'ferry',
+                  from: 'Pier 1',
+                  to: 'Island harbor',
+                  date: '2026-11-17',
+                  startTime: '16:00',
+                  endTime: '17:00',
+                  notes: 'Boarding closes early.',
+                  bookingIds: ['booking-unlinked'],
+                  sourceIds: ['source-unlinked'],
+                }
+              : transport,
       ),
     }
 
@@ -48,6 +58,9 @@ describe('TripDetail', () => {
     expect(markup).toContain('Asia/Tokyo')
     expect(markup).toContain('10:00–15:00')
     expect(markup).toContain('Yanaka')
+    expect(markup).toMatch(/Airport transfer[\s\S]*?>taxi</)
+    expect(markup).toContain('Tokyo → Kiso')
+    expect(markup).not.toContain('Origin not set → Kiso')
     expect(markup).toContain('Example Hotels')
     expect(markup).toContain('DEMO-STAY')
     expect(markup).toContain('Breakfast included.')
