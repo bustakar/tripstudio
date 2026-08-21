@@ -164,7 +164,14 @@ function StayRow({ stay }: { stay: Stay }) {
         </div>
       </div>
       {stay.notes && (
-        <p className="text-sm text-muted-foreground">{stay.notes}</p>
+        <p className="whitespace-pre-wrap text-sm text-muted-foreground">
+          {stay.notes}
+        </p>
+      )}
+      {stay.showStopName && stay.stopName && (
+        <p className="text-sm text-muted-foreground">
+          Destination: {stay.stopName}
+        </p>
       )}
       {stay.stopMismatch && (
         <p className="text-sm font-medium text-destructive">
@@ -236,7 +243,11 @@ function DayCard({ day }: { day: DayView }) {
             </h4>
           </div>
         </div>
-        {day.notes && <CardDescription>{day.notes}</CardDescription>}
+        {day.notes && (
+          <CardDescription className="whitespace-pre-wrap">
+            {day.notes}
+          </CardDescription>
+        )}
       </CardHeader>
       <CardContent className="grid gap-4 px-4">
         {day.items.length > 0 ? (
@@ -370,7 +381,9 @@ function StopCard({
       </CardHeader>
       <CardContent className="grid gap-4">
         {stop.notes && (
-          <p className="text-sm text-muted-foreground">{stop.notes}</p>
+          <p className="whitespace-pre-wrap text-sm text-muted-foreground">
+            {stop.notes}
+          </p>
         )}
         {stop.days.map((day) => (
           <DayCard day={day} key={day.id} />

@@ -19,19 +19,31 @@ describe('TripDetail', () => {
           name: 'A traveler with a deliberately very long display name',
         },
       ],
+      stops: completePreviewTrip.document.stops.map((stop) =>
+        stop.id === 'stop-tokyo'
+          ? { ...stop, notes: 'Stop line one\nStop line two' }
+          : stop,
+      ),
       stays: [
         ...completePreviewTrip.document.stays,
         {
           id: 'stay-cross-stop',
           stopId: 'stop-kyoto',
           title: 'Wrong-city hotel',
+          notes: 'Stay line one\nStay line two',
           sourceIds: [],
         },
       ],
       days: completePreviewTrip.document.days.map((day) => ({
         ...day,
         overnightStayId:
-          day.id === 'day-tokyo-1' ? 'stay-cross-stop' : day.overnightStayId,
+          day.id === 'day-tokyo-1'
+            ? 'stay-cross-stop'
+            : day.id === 'day-unassigned'
+              ? 'stay-unassigned'
+              : day.overnightStayId,
+        notes:
+          day.id === 'day-tokyo-1' ? 'Day line one\nDay line two' : day.notes,
         items: day.items.map((item) =>
           item.id === 'transport-taxi'
             ? {
@@ -94,6 +106,16 @@ describe('TripDetail', () => {
     expect(markup).toContain('DEMO-STAY')
     expect(markup).toContain('Breakfast included.')
     expect(markup).toContain('This stay belongs to Kyoto, not this day’s stop.')
+    expect(markup).toContain('Destination: Kyoto')
+    expect(markup).toMatch(
+      /whitespace-pre-wrap[^>]*>Stop line one\nStop line two/,
+    )
+    expect(markup).toMatch(
+      /whitespace-pre-wrap[^>]*>Day line one\nDay line two/,
+    )
+    expect(markup).toMatch(
+      /whitespace-pre-wrap[^>]*>Stay line one\nStay line two/,
+    )
     expect(markup).toContain('Pier 1')
     expect(markup).toContain('Island harbor')
     expect(markup).toContain('16:00–17:00')

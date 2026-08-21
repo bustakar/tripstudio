@@ -27,7 +27,11 @@ export function buildTripPlanView(document: TripPlanDocument) {
     })
   }
 
-  function resolveStay(id: string | undefined, dayStopId?: string) {
+  function resolveStay(
+    id: string | undefined,
+    dayStopId?: string,
+    showStopName = false,
+  ) {
     if (!id) return undefined
     linkedStayIds.add(id)
     const stay = stays.get(id)
@@ -37,6 +41,7 @@ export function buildTripPlanView(document: TripPlanDocument) {
       ...stay,
       stopName: stopNames.get(stay.stopId),
       stopMismatch: Boolean(dayStopId && stay.stopId !== dayStopId),
+      showStopName,
       booking: stay.bookingId ? bookings.get(stay.bookingId) : undefined,
       sources: resolveSourceIds(stay.sourceIds),
     }
@@ -45,7 +50,7 @@ export function buildTripPlanView(document: TripPlanDocument) {
   function resolveDay(day: TripPlanDocument['days'][number]) {
     return {
       ...day,
-      overnightStay: resolveStay(day.overnightStayId, day.stopId),
+      overnightStay: resolveStay(day.overnightStayId, day.stopId, !day.stopId),
       bookings: resolveBookingIds(day.bookingIds),
       sources: resolveSourceIds(day.sourceIds),
       items: day.items.map((item) => ({
