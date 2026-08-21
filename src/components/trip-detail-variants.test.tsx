@@ -98,8 +98,6 @@ describe('TripDetail', () => {
           title: completePreviewTrip.title,
           startDate: completePreviewTrip.startDate,
           endDate: completePreviewTrip.endDate,
-          planningBrief:
-            '## Overview\n\n- Keep it easy\n\n[Guide](https://example.com/guide)\n\n<script>alert("x")</script>',
           document,
         }}
       />,
@@ -143,10 +141,6 @@ describe('TripDetail', () => {
     expect(markup).toMatch(
       /whitespace-pre-wrap[^>]*>• First decision\nSecond line/,
     )
-    expect(markup).toMatch(/<h3[^>]*>Overview<\/h3>/)
-    expect(markup).toContain('<li>Keep it easy</li>')
-    expect(markup).toContain('href="https://example.com/guide"')
-    expect(markup).not.toContain('<script')
     expect(markup).toContain('Pier 1')
     expect(markup).toContain('Island harbor')
     expect(markup).toContain('16:00–17:00')
@@ -163,7 +157,6 @@ describe('TripDetail', () => {
           title: sparsePreviewTrip.title,
           startDate: null,
           endDate: null,
-          planningBrief: sparsePreviewTrip.planningBrief,
           document: sparsePreviewTrip.document,
         }}
       />,
@@ -171,5 +164,50 @@ describe('TripDetail', () => {
 
     expect(markup).toContain('1 stop')
     expect(markup).not.toContain('1 stops')
+  })
+
+  it('does not expose the agent planning brief', () => {
+    const trip = {
+      title: sparsePreviewTrip.title,
+      startDate: null,
+      endDate: null,
+      planningBrief: 'Agent-only working context',
+      document: sparsePreviewTrip.document,
+    }
+
+    const markup = renderToStaticMarkup(<TripDetail trip={trip} />)
+
+    expect(markup).not.toContain('Trip notes')
+    expect(markup).not.toContain('Agent-only working context')
+  })
+
+  it('renders relative days without inventing calendar dates', () => {
+    const document: TripPlanDocument = {
+      ...sparsePreviewTrip.document,
+      days: [
+        {
+          id: 'relative-day',
+          stopId: sparsePreviewTrip.document.stops[0]?.id,
+          title: 'Nikko day trip',
+          items: [],
+          bookingIds: [],
+          sourceIds: [],
+        },
+      ],
+    }
+
+    const markup = renderToStaticMarkup(
+      <TripDetail
+        trip={{
+          title: sparsePreviewTrip.title,
+          startDate: null,
+          endDate: null,
+          document,
+        }}
+      />,
+    )
+
+    expect(markup).toContain('Date TBD')
+    expect(markup).toContain('Nikko day trip')
   })
 })

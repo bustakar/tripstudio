@@ -255,6 +255,28 @@ describe('Trip Plan contract', () => {
     ).toThrow('Unknown stop missing')
   })
 
+  it('accepts a relative day before trip dates are known', () => {
+    expect(
+      tripPlanDocumentSchema.parse({
+        ...emptyTripPlanDocument(),
+        stops: [{ id: 'kyoto', position: 0, name: 'Kyoto', sourceIds: [] }],
+        days: [
+          {
+            id: 'kyoto-day-1',
+            stopId: 'kyoto',
+            title: 'Kiyomizu-dera and Higashiyama',
+            items: [],
+            bookingIds: [],
+            sourceIds: [],
+          },
+        ],
+      }).days[0],
+    ).toMatchObject({
+      id: 'kyoto-day-1',
+      title: 'Kiyomizu-dera and Higashiyama',
+    })
+  })
+
   it('validates stop ordering and source links', () => {
     const stop = {
       id: 'kyoto',

@@ -1,5 +1,15 @@
 import type { TripPlanDocument } from '@/domain/trip-plan'
 
+function compareDays(
+  left: TripPlanDocument['days'][number],
+  right: TripPlanDocument['days'][number],
+) {
+  if (left.date && right.date) return left.date.localeCompare(right.date)
+  if (left.date) return -1
+  if (right.date) return 1
+  return 0
+}
+
 export function buildTripPlanView(document: TripPlanDocument) {
   const bookings = new Map(
     document.bookings.map((booking) => [booking.id, booking]),
@@ -77,7 +87,7 @@ export function buildTripPlanView(document: TripPlanDocument) {
     sources: resolveSourceIds(stop.sourceIds),
     days: document.days
       .filter((day) => day.stopId === stop.id)
-      .sort((left, right) => left.date.localeCompare(right.date))
+      .sort(compareDays)
       .map(resolveDay),
     outboundTransports: document.transports
       .filter((transport) => transport.fromStopId === stop.id)
@@ -86,7 +96,7 @@ export function buildTripPlanView(document: TripPlanDocument) {
 
   const unassignedDays = document.days
     .filter((day) => !day.stopId)
-    .sort((left, right) => left.date.localeCompare(right.date))
+    .sort(compareDays)
     .map(resolveDay)
   const unassignedTransports = document.transports
     .filter((transport) => !transport.fromStopId)
