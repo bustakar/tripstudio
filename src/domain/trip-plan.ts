@@ -118,7 +118,7 @@ export const staySchema = z.object({
 export const tripDaySchema = z.object({
   id: entityId,
   stopId: entityId.optional(),
-  date,
+  date: date.optional(),
   title: z.string().optional(),
   notes: z.string().optional(),
   overnightStayId: entityId.optional(),

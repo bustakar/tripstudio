@@ -80,14 +80,12 @@ function TripVersionView({
         title: selectedRevision.snapshot.title,
         startDate: selectedRevision.snapshot.startDate,
         endDate: selectedRevision.snapshot.endDate,
-        planningBrief: selectedRevision.snapshot.planningBrief,
         document: normalizeTripPlanDocument(selectedRevision.snapshot.document),
       }
     : {
         title: plan.title,
         startDate: plan.startDate,
         endDate: plan.endDate,
-        planningBrief: plan.planningBrief,
         document: plan.document,
       }
 

@@ -17,7 +17,6 @@ import {
   TrainFront,
   Users,
 } from 'lucide-react'
-import Markdown from 'react-markdown'
 
 import { Badge } from '@/components/ui/badge'
 import {
@@ -35,7 +34,6 @@ export type TripDetailData = {
   title: string
   startDate: string | null
   endDate: string | null
-  planningBrief: string
   document: TripPlanDocument
 }
 
@@ -233,16 +231,17 @@ function DayItemRow({ item }: { item: DayItemView }) {
 }
 
 function DayCard({ day }: { day: DayView }) {
-  const formatted = formatDay(day.date)
+  const formatted = day.date ? formatDay(day.date) : undefined
   return (
     <Card className="gap-4 py-4 shadow-none">
       <CardHeader className="gap-1 px-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2">
-            <Badge variant="outline">{formatted.weekday}</Badge>
+            <Badge variant="outline">{formatted?.weekday ?? 'Date TBD'}</Badge>
             <h4 className="text-sm font-semibold leading-none">
-              {formatted.date}
-              {day.title ? ` · ${day.title}` : ''}
+              {formatted
+                ? `${formatted.date}${day.title ? ` · ${day.title}` : ''}`
+                : day.title || 'Plans'}
             </h4>
           </div>
         </div>
@@ -535,116 +534,39 @@ function Decisions({ document }: { document: TripPlanDocument }) {
   )
 }
 
-function PlanningBrief({ children }: { children: string }) {
-  return (
-    <Markdown
-      components={{
-        h1: ({ children: content }) => (
-          <h3 className="text-base font-semibold">{content}</h3>
-        ),
-        h2: ({ children: content }) => (
-          <h3 className="text-base font-semibold">{content}</h3>
-        ),
-        h3: ({ children: content }) => (
-          <h4 className="text-sm font-semibold">{content}</h4>
-        ),
-        h4: ({ children: content }) => (
-          <h5 className="text-sm font-semibold">{content}</h5>
-        ),
-        h5: ({ children: content }) => (
-          <h6 className="text-sm font-semibold">{content}</h6>
-        ),
-        h6: ({ children: content }) => (
-          <h6 className="text-sm font-semibold">{content}</h6>
-        ),
-        p: ({ children: content }) => (
-          <p className="text-sm leading-6 text-muted-foreground">{content}</p>
-        ),
-        ul: ({ children: content }) => (
-          <ul className="list-disc space-y-1 pl-5 text-sm text-muted-foreground">
-            {content}
-          </ul>
-        ),
-        ol: ({ children: content }) => (
-          <ol className="list-decimal space-y-1 pl-5 text-sm text-muted-foreground">
-            {content}
-          </ol>
-        ),
-        a: ({ children: content, href }) => (
-          <a
-            className="font-medium text-foreground underline underline-offset-4"
-            href={href}
-            rel="noreferrer"
-            target="_blank"
-          >
-            {content}
-          </a>
-        ),
-        blockquote: ({ children: content }) => (
-          <blockquote className="border-l-2 pl-3 text-muted-foreground">
-            {content}
-          </blockquote>
-        ),
-        hr: () => <Separator />,
-      }}
-      skipHtml
-    >
-      {children}
-    </Markdown>
-  )
-}
-
 function UnlinkedDetails({
   view,
-  planningBrief,
   stopNames,
 }: {
   view: TripView
-  planningBrief: string
   stopNames: Map<string, string>
 }) {
   const hasUnlinked =
     view.unlinkedBookings.length > 0 ||
     view.unlinkedSources.length > 0 ||
     view.unassignedTransports.length > 0
-  if (!hasUnlinked && !planningBrief.trim()) return null
+  if (!hasUnlinked) return null
   return (
-    <div className="grid gap-4 md:grid-cols-2">
-      {planningBrief.trim() && (
-        <Card className="gap-4 shadow-none">
-          <CardHeader>
-            <h2 className="text-lg font-semibold leading-none">Trip notes</h2>
-          </CardHeader>
-          <CardContent className="grid gap-3">
-            <PlanningBrief>{planningBrief}</PlanningBrief>
-          </CardContent>
-        </Card>
-      )}
-      {hasUnlinked && (
-        <Card className="gap-4 shadow-none">
-          <CardHeader>
-            <h2 className="text-lg font-semibold leading-none">
-              Not linked yet
-            </h2>
-            <CardDescription>
-              Details saved to this trip but not assigned to a place or day.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="grid gap-3">
-            <BookingDetails bookings={view.unlinkedBookings} />
-            <SourceLinks sources={view.unlinkedSources} />
-            {view.unassignedTransports.map((transport) => (
-              <TransportRow
-                embedded
-                key={transport.id}
-                stopNames={stopNames}
-                transport={transport}
-              />
-            ))}
-          </CardContent>
-        </Card>
-      )}
-    </div>
+    <Card className="gap-4 shadow-none">
+      <CardHeader>
+        <h2 className="text-lg font-semibold leading-none">Not linked yet</h2>
+        <CardDescription>
+          Details saved to this trip but not assigned to a place or day.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="grid gap-3">
+        <BookingDetails bookings={view.unlinkedBookings} />
+        <SourceLinks sources={view.unlinkedSources} />
+        {view.unassignedTransports.map((transport) => (
+          <TransportRow
+            embedded
+            key={transport.id}
+            stopNames={stopNames}
+            transport={transport}
+          />
+        ))}
+      </CardContent>
+    </Card>
   )
 }
 
@@ -718,11 +640,7 @@ export function TripDetail({
         </section>
         <Decisions document={trip.document} />
         <Separator />
-        <UnlinkedDetails
-          planningBrief={trip.planningBrief}
-          stopNames={stopNames}
-          view={view}
-        />
+        <UnlinkedDetails stopNames={stopNames} view={view} />
       </div>
     </article>
   )
