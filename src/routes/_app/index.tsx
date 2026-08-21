@@ -11,6 +11,10 @@ import {
 
 export const Route = createFileRoute('/_app/')({ component: ProjectsPage })
 const appRoute = getRouteApi('/_app')
+const updatedAtFormatter = new Intl.DateTimeFormat('en-GB', {
+  dateStyle: 'medium',
+  timeZone: 'UTC',
+})
 
 function ProjectsPage() {
   const plans = appRoute.useLoaderData()
@@ -47,7 +51,7 @@ function ProjectsPage() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="text-xs text-muted-foreground">
-                  Updated {new Date(plan.updatedAt).toLocaleDateString()}
+                  Updated {updatedAtFormatter.format(new Date(plan.updatedAt))}
                 </CardContent>
               </Card>
             </a>
