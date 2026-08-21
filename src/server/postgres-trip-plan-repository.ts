@@ -23,6 +23,7 @@ import type {
 import { db } from '@/lib/database'
 import {
   tripPlanDocumentBackups,
+  tripPlanMembers,
   tripPlanRevisions,
   tripPlans,
 } from '@/lib/schema'
@@ -33,6 +34,17 @@ function normalizeRow(row: StoredTripPlanRow): TripPlanRow {
 }
 
 const revisionPageSize = 20
+
+function canAccess(userId: string) {
+  return sql<boolean>`(
+    ${tripPlans.ownerId} = ${userId}
+    OR EXISTS (
+      SELECT 1 FROM ${tripPlanMembers}
+      WHERE ${tripPlanMembers.tripPlanId} = ${tripPlans.id}
+        AND ${tripPlanMembers.userId} = ${userId}
+    )
+  )`
+}
 
 const revisionSummaryColumns = {
   id: tripPlanRevisions.id,
@@ -62,20 +74,20 @@ function pageFromRows(
 }
 
 export class PostgresTripPlanRepository implements TripPlanRepository {
-  async list(ownerId: string) {
+  async list(userId: string) {
     const plans = await db
       .select()
       .from(tripPlans)
-      .where(eq(tripPlans.ownerId, ownerId))
+      .where(canAccess(userId))
       .orderBy(desc(tripPlans.updatedAt))
     return plans.map(normalizeRow)
   }
 
-  async get(ownerId: string, id: string) {
+  async get(userId: string, id: string) {
     const plans = await db
       .select()
       .from(tripPlans)
-      .where(and(eq(tripPlans.ownerId, ownerId), eq(tripPlans.id, id)))
+      .where(and(eq(tripPlans.id, id), canAccess(userId)))
       .limit(1)
     return plans.length === 0 ? null : normalizeRow(plans[0])
   }
@@ -98,7 +110,7 @@ export class PostgresTripPlanRepository implements TripPlanRepository {
     return normalizeRow(plans[0])
   }
 
-  async update(ownerId: string, input: UpdateTripPlanInput) {
+  async update(userId: string, input: UpdateTripPlanInput) {
     const { id, expectedVersion, ...changes } = input
     return db.transaction(async (transaction) => {
       const current = await transaction
@@ -107,7 +119,7 @@ export class PostgresTripPlanRepository implements TripPlanRepository {
         .where(
           and(
             eq(tripPlans.id, id),
-            eq(tripPlans.ownerId, ownerId),
+            canAccess(userId),
             eq(tripPlans.version, expectedVersion),
           ),
         )
@@ -143,7 +155,7 @@ export class PostgresTripPlanRepository implements TripPlanRepository {
         .where(
           and(
             eq(tripPlans.id, id),
-            eq(tripPlans.ownerId, ownerId),
+            canAccess(userId),
             eq(tripPlans.version, expectedVersion),
           ),
         )
@@ -153,13 +165,13 @@ export class PostgresTripPlanRepository implements TripPlanRepository {
     })
   }
 
-  async getWithRevisionHistory(ownerId: string, id: string) {
+  async getWithRevisionHistory(userId: string, id: string) {
     return db.transaction(
       async (transaction) => {
         const plans = await transaction
           .select()
           .from(tripPlans)
-          .where(and(eq(tripPlans.ownerId, ownerId), eq(tripPlans.id, id)))
+          .where(and(eq(tripPlans.id, id), canAccess(userId)))
           .limit(1)
         if (plans.length === 0)
           return { plan: null, revisions: [], nextBeforeVersion: null }
@@ -177,23 +189,23 @@ export class PostgresTripPlanRepository implements TripPlanRepository {
     )
   }
 
-  async listRevisions(ownerId: string, id: string, beforeVersion?: number) {
-    const ownership = and(eq(tripPlans.id, id), eq(tripPlans.ownerId, ownerId))
+  async listRevisions(userId: string, id: string, beforeVersion?: number) {
+    const access = and(eq(tripPlans.id, id), canAccess(userId))
     const rows = await db
       .select(revisionSummaryColumns)
       .from(tripPlanRevisions)
       .innerJoin(tripPlans, eq(tripPlanRevisions.tripPlanId, tripPlans.id))
       .where(
         beforeVersion
-          ? and(ownership, lt(tripPlanRevisions.version, beforeVersion))
-          : ownership,
+          ? and(access, lt(tripPlanRevisions.version, beforeVersion))
+          : access,
       )
       .orderBy(desc(tripPlanRevisions.version))
       .limit(revisionPageSize + 1)
     return pageFromRows(rows)
   }
 
-  async getRevision(ownerId: string, id: string, version: number) {
+  async getRevision(userId: string, id: string, version: number) {
     const revisions = await db
       .select({
         id: tripPlanRevisions.id,
@@ -207,7 +219,7 @@ export class PostgresTripPlanRepository implements TripPlanRepository {
       .where(
         and(
           eq(tripPlans.id, id),
-          eq(tripPlans.ownerId, ownerId),
+          canAccess(userId),
           eq(tripPlanRevisions.version, version),
         ),
       )
@@ -219,7 +231,7 @@ export class PostgresTripPlanRepository implements TripPlanRepository {
     }
   }
 
-  async restoreRevision(ownerId: string, input: RestoreTripPlanRevisionInput) {
+  async restoreRevision(userId: string, input: RestoreTripPlanRevisionInput) {
     return db.transaction(async (transaction) => {
       const current = await transaction
         .select({ document: tripPlans.document })
@@ -227,7 +239,7 @@ export class PostgresTripPlanRepository implements TripPlanRepository {
         .where(
           and(
             eq(tripPlans.id, input.id),
-            eq(tripPlans.ownerId, ownerId),
+            canAccess(userId),
             eq(tripPlans.version, input.expectedVersion),
           ),
         )
@@ -274,7 +286,7 @@ export class PostgresTripPlanRepository implements TripPlanRepository {
         .where(
           and(
             eq(tripPlans.id, input.id),
-            eq(tripPlans.ownerId, ownerId),
+            canAccess(userId),
             eq(tripPlans.version, input.expectedVersion),
           ),
         )

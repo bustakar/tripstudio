@@ -17,6 +17,7 @@ import { Route as DotwellKnownOauthProtectedResourceRouteImport } from './routes
 import { Route as AppIndexRouteImport } from './routes/_app/index'
 import { Route as AppConnectRouteImport } from './routes/_app/connect'
 import { Route as AppSettingsRouteImport } from './routes/_app/settings'
+import { Route as InvitationsTokenRouteImport } from './routes/invitations/$token'
 import { Route as DotwellKnownOauthProtectedResourceMcpRouteImport } from './routes/[.]well-known/oauth-protected-resource/mcp'
 import { Route as AppProjectsProjectIdRouteImport } from './routes/_app/projects/$projectId'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
@@ -62,6 +63,11 @@ const AppSettingsRoute = AppSettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => AppRoute,
 } as any)
+const InvitationsTokenRoute = InvitationsTokenRouteImport.update({
+  id: '/invitations/$token',
+  path: '/invitations/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DotwellKnownOauthProtectedResourceMcpRoute =
   DotwellKnownOauthProtectedResourceMcpRouteImport.update({
     id: '/mcp',
@@ -93,6 +99,7 @@ export interface FileRoutesByFullPath {
   '/.well-known/oauth-protected-resource': typeof DotwellKnownOauthProtectedResourceRouteWithChildren
   '/connect': typeof AppConnectRoute
   '/settings': typeof AppSettingsRoute
+  '/invitations/$token': typeof InvitationsTokenRoute
   '/.well-known/oauth-protected-resource/mcp': typeof DotwellKnownOauthProtectedResourceMcpRoute
   '/projects/$projectId': typeof AppProjectsProjectIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -105,6 +112,7 @@ export interface FileRoutesByTo {
   '/.well-known/oauth-protected-resource': typeof DotwellKnownOauthProtectedResourceRouteWithChildren
   '/connect': typeof AppConnectRoute
   '/settings': typeof AppSettingsRoute
+  '/invitations/$token': typeof InvitationsTokenRoute
   '/': typeof AppIndexRoute
   '/.well-known/oauth-protected-resource/mcp': typeof DotwellKnownOauthProtectedResourceMcpRoute
   '/projects/$projectId': typeof AppProjectsProjectIdRoute
@@ -120,6 +128,7 @@ export interface FileRoutesById {
   '/.well-known/oauth-protected-resource': typeof DotwellKnownOauthProtectedResourceRouteWithChildren
   '/_app/connect': typeof AppConnectRoute
   '/_app/settings': typeof AppSettingsRoute
+  '/invitations/$token': typeof InvitationsTokenRoute
   '/_app/': typeof AppIndexRoute
   '/.well-known/oauth-protected-resource/mcp': typeof DotwellKnownOauthProtectedResourceMcpRoute
   '/_app/projects/$projectId': typeof AppProjectsProjectIdRoute
@@ -136,6 +145,7 @@ export interface FileRouteTypes {
     | '/.well-known/oauth-protected-resource'
     | '/connect'
     | '/settings'
+    | '/invitations/$token'
     | '/.well-known/oauth-protected-resource/mcp'
     | '/projects/$projectId'
     | '/api/auth/$'
@@ -148,6 +158,7 @@ export interface FileRouteTypes {
     | '/.well-known/oauth-protected-resource'
     | '/connect'
     | '/settings'
+    | '/invitations/$token'
     | '/'
     | '/.well-known/oauth-protected-resource/mcp'
     | '/projects/$projectId'
@@ -162,6 +173,7 @@ export interface FileRouteTypes {
     | '/.well-known/oauth-protected-resource'
     | '/_app/connect'
     | '/_app/settings'
+    | '/invitations/$token'
     | '/_app/'
     | '/.well-known/oauth-protected-resource/mcp'
     | '/_app/projects/$projectId'
@@ -175,6 +187,7 @@ export interface RootRouteChildren {
   McpRoute: typeof McpRoute
   SignInRoute: typeof SignInRoute
   DotwellKnownOauthProtectedResourceRoute: typeof DotwellKnownOauthProtectedResourceRouteWithChildren
+  InvitationsTokenRoute: typeof InvitationsTokenRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
   DotwellKnownOauthAuthorizationServerApiAuthRoute: typeof DotwellKnownOauthAuthorizationServerApiAuthRoute
 }
@@ -236,6 +249,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/settings'
       preLoaderRoute: typeof AppSettingsRouteImport
       parentRoute: typeof AppRoute
+    }
+    '/invitations/$token': {
+      id: '/invitations/$token'
+      path: '/invitations/$token'
+      fullPath: '/invitations/$token'
+      preLoaderRoute: typeof InvitationsTokenRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/.well-known/oauth-protected-resource/mcp': {
       id: '/.well-known/oauth-protected-resource/mcp'
@@ -306,6 +326,7 @@ const rootRouteChildren: RootRouteChildren = {
   SignInRoute: SignInRoute,
   DotwellKnownOauthProtectedResourceRoute:
     DotwellKnownOauthProtectedResourceRouteWithChildren,
+  InvitationsTokenRoute: InvitationsTokenRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
   DotwellKnownOauthAuthorizationServerApiAuthRoute:
     DotwellKnownOauthAuthorizationServerApiAuthRoute,
