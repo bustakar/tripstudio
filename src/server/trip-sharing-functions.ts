@@ -18,16 +18,12 @@ export const getTripPlanInvitation = createServerFn({ method: 'GET' })
   .validator(invitationTokenSchema)
   .handler(async ({ data: token }) => {
     const session = await requireSession()
-    return tripSharingRepository.getInvitation(session.user.email, token)
+    return tripSharingRepository.getInvitation(session.user.id, token)
   })
 
 export const acceptTripPlanInvitation = createServerFn({ method: 'POST' })
   .validator(invitationTokenSchema)
   .handler(async ({ data: token }) => {
     const session = await requireSession()
-    return tripSharingRepository.acceptInvitation(
-      session.user.id,
-      session.user.email,
-      token,
-    )
+    return tripSharingRepository.acceptInvitation(session.user.id, token)
   })

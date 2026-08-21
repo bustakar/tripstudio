@@ -104,12 +104,6 @@
           "primaryKey": false,
           "notNull": true
         },
-        "email": {
-          "name": "email",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
         "token_hash": {
           "name": "token_hash",
           "type": "text",

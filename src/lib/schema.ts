@@ -93,7 +93,6 @@ export const tripPlanInvitations = pgTable(
       .notNull()
       .references(() => tripPlans.id, { onDelete: 'cascade' }),
     invitedByUserId: text('invited_by_user_id').notNull(),
-    email: text('email').notNull(),
     tokenHash: text('token_hash').notNull(),
     expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
     acceptedAt: timestamp('accepted_at', { withTimezone: true }),

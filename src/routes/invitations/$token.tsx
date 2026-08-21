@@ -11,6 +11,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
+import { invitationTokenSchema } from '@/domain/trip-sharing'
 import { getSession } from '@/lib/auth-functions'
 import {
   acceptTripPlanInvitation,
@@ -23,7 +24,11 @@ export const Route = createFileRoute('/invitations/$token')({
     if (!session)
       throw redirect({ to: '/sign-in', search: { redirect: location.href } })
   },
-  loader: ({ params }) => getTripPlanInvitation({ data: params.token }),
+  loader: ({ params }) => {
+    const token = invitationTokenSchema.safeParse(params.token)
+    if (!token.success) return null
+    return getTripPlanInvitation({ data: token.data })
+  },
   component: InvitationPage,
 })
 
@@ -64,7 +69,7 @@ function InvitationPage() {
           </CardTitle>
           <CardDescription>
             {invitation
-              ? `This invitation gives ${invitation.email} shared editing access to the trip.`
+              ? 'Accept this invitation to edit the trip together.'
               : 'This link is invalid, expired, or belongs to another account.'}
           </CardDescription>
         </CardHeader>

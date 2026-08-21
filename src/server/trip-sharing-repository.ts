@@ -1,5 +1,5 @@
 import { createHash, randomBytes } from 'node:crypto'
-import { and, eq, gt, isNotNull, or } from 'drizzle-orm'
+import { and, eq, gt, isNotNull, isNull, or } from 'drizzle-orm'
 
 import type { CreateTripPlanInvitationInput } from '@/domain/trip-sharing'
 import { db } from '@/lib/database'
@@ -7,10 +7,6 @@ import { env } from '@/lib/env'
 import { tripPlanInvitations, tripPlanMembers, tripPlans } from '@/lib/schema'
 
 const invitationLifetimeMs = 7 * 24 * 60 * 60 * 1_000
-
-function normalizeEmail(email: string) {
-  return email.trim().toLowerCase()
-}
 
 function hashToken(token: string) {
   return createHash('sha256').update(token).digest('hex')
@@ -51,11 +47,9 @@ export class TripSharingRepository {
         .limit(1)
       if (plans.length === 0) throw new InvitationPermissionError()
 
-      const email = normalizeEmail(input.email)
       await transaction.insert(tripPlanInvitations).values({
         tripPlanId: input.tripPlanId,
         invitedByUserId,
-        email,
         tokenHash: hashToken(token),
         expiresAt,
       })
@@ -63,19 +57,17 @@ export class TripSharingRepository {
       return {
         tripPlanId: input.tripPlanId,
         tripTitle: plans[0].title,
-        email,
         expiresAt,
         inviteUrl: new URL(`/invitations/${token}`, env.APP_URL).toString(),
       }
     })
   }
 
-  async getInvitation(userEmail: string, token: string) {
+  async getInvitation(userId: string, token: string) {
     const invitations = await db
       .select({
         tripPlanId: tripPlanInvitations.tripPlanId,
         tripTitle: tripPlans.title,
-        email: tripPlanInvitations.email,
         expiresAt: tripPlanInvitations.expiresAt,
         acceptedAt: tripPlanInvitations.acceptedAt,
       })
@@ -84,10 +76,15 @@ export class TripSharingRepository {
       .where(
         and(
           eq(tripPlanInvitations.tokenHash, hashToken(token)),
-          eq(tripPlanInvitations.email, normalizeEmail(userEmail)),
           or(
-            gt(tripPlanInvitations.expiresAt, new Date()),
-            isNotNull(tripPlanInvitations.acceptedAt),
+            and(
+              isNull(tripPlanInvitations.acceptedAt),
+              gt(tripPlanInvitations.expiresAt, new Date()),
+            ),
+            and(
+              isNotNull(tripPlanInvitations.acceptedAt),
+              eq(tripPlanInvitations.acceptedByUserId, userId),
+            ),
           ),
         ),
       )
@@ -97,7 +94,7 @@ export class TripSharingRepository {
     return { ...invitation, accepted: invitation.acceptedAt !== null }
   }
 
-  async acceptInvitation(userId: string, userEmail: string, token: string) {
+  async acceptInvitation(userId: string, token: string) {
     return db.transaction(async (transaction) => {
       const invitations = await transaction
         .select()
@@ -109,7 +106,6 @@ export class TripSharingRepository {
       const invitation = invitations[0]
 
       if (
-        invitation.email !== normalizeEmail(userEmail) ||
         (!invitation.acceptedAt && invitation.expiresAt <= new Date()) ||
         (invitation.acceptedAt && invitation.acceptedByUserId !== userId)
       )

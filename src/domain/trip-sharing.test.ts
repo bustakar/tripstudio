@@ -6,13 +6,14 @@ import {
 } from '@/domain/trip-sharing'
 
 describe('trip sharing contract', () => {
-  it('normalizes invitee emails', () => {
+  it('accepts a trip identifier for a bearer invitation', () => {
     expect(
       createTripPlanInvitationInputSchema.parse({
         tripPlanId: '93a58652-8754-4e7d-b46f-9f475315f84d',
-        email: ' Wife@Example.COM ',
-      }).email,
-    ).toBe('wife@example.com')
+      }),
+    ).toEqual({
+      tripPlanId: '93a58652-8754-4e7d-b46f-9f475315f84d',
+    })
   })
 
   it('accepts only complete base64url invitation tokens', () => {

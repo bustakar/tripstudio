@@ -93,7 +93,7 @@ function createTripStudioServer(ownerId: string) {
     'create_trip_plan_invitation',
     {
       description:
-        'Create a seven-day, email-bound invitation link for a trip owned by the current user. Return the link to the user; Trip Studio does not deliver email yet.',
+        'Create a seven-day, single-use invitation link for a trip owned by the current user. Return the link for the user to share.',
       inputSchema: createTripPlanInvitationInputSchema,
     },
     async (input) =>

@@ -2,7 +2,6 @@ CREATE TABLE "trip_plan_invitations" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"trip_plan_id" uuid NOT NULL,
 	"invited_by_user_id" text NOT NULL,
-	"email" text NOT NULL,
 	"token_hash" text NOT NULL,
 	"expires_at" timestamp with time zone NOT NULL,
 	"accepted_at" timestamp with time zone,
