@@ -309,12 +309,14 @@ function TripOverview({ trip }: { trip: TripDetailData }) {
         )}
         {trip.document.stops.length > 0 && (
           <Badge variant="secondary">
-            <MapPin /> {trip.document.stops.length} stops
+            <MapPin /> {trip.document.stops.length}{' '}
+            {trip.document.stops.length === 1 ? 'stop' : 'stops'}
           </Badge>
         )}
         {trip.document.bookings.length > 0 && (
           <Badge variant="secondary">
-            <TicketCheck /> {trip.document.bookings.length} bookings
+            <TicketCheck /> {trip.document.bookings.length}{' '}
+            {trip.document.bookings.length === 1 ? 'booking' : 'bookings'}
             {confirmed > 0 ? ` · ${confirmed} confirmed` : ''}
           </Badge>
         )}
