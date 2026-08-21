@@ -133,13 +133,41 @@ function createTripStudioServer(ownerId: string) {
     'list_trip_plan_revisions',
     {
       description:
-        'List every saved version of one project, newest first, including complete snapshots.',
-      inputSchema: z.object({ id: z.uuid() }),
-    },
-    async ({ id }) =>
-      toolResult({
-        revisions: await tripPlanRepository.listRevisions(ownerId, id),
+        'List saved version summaries newest first, 20 at a time. Pass the returned nextBeforeVersion as beforeVersion to continue.',
+      inputSchema: z.object({
+        id: z.uuid(),
+        beforeVersion: z.number().int().positive().optional(),
       }),
+    },
+    async ({ id, beforeVersion }) =>
+      toolResult({
+        ...(await tripPlanRepository.listRevisions(ownerId, id, beforeVersion)),
+      }),
+  )
+
+  server.registerTool(
+    'get_trip_plan_revision',
+    {
+      description:
+        'Read the complete immutable snapshot for one saved version.',
+      inputSchema: z.object({
+        id: z.uuid(),
+        revisionVersion: z.number().int().positive(),
+      }),
+    },
+    async ({ id, revisionVersion }) => {
+      const revision = await tripPlanRepository.getRevision(
+        ownerId,
+        id,
+        revisionVersion,
+      )
+      return revision
+        ? toolResult({ revision })
+        : {
+            isError: true,
+            content: [{ type: 'text', text: 'Revision not found' }],
+          }
+    },
   )
 
   server.registerTool(
