@@ -43,6 +43,21 @@ The managed development and production databases are separate Neon projects in F
 Functions run in `fra1` to keep database traffic regional. Self-hosted installations can use any
 compatible PostgreSQL provider.
 
+## Pull request previews
+
+A maintainer can add the `preview:web` label to an internal pull request to create a disposable
+Vercel deployment backed by an isolated Neon branch. Inherited rows are cleared before deployment
+while migration history is preserved, then two tracked demo trips are seeded for this public
+preview-only account:
+
+```text
+Email: preview@tripstudio.test
+Password: tripstudio-preview
+```
+
+The database is rebuilt for new commits, deleted when the label is removed or the pull request is
+closed, and expires automatically after seven days.
+
 ## Plugins
 
 `plugins/tripstudio` is the production Codex plugin. `plugins/tripstudio-dev` uses the Development

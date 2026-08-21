@@ -19,6 +19,8 @@
     "db:generate": "drizzle-kit generate && auth generate --config src/lib/auth.ts --output drizzle/auth.sql --yes",
     "db:migrate": "drizzle-kit migrate && auth migrate --config src/lib/auth.ts --yes",
     "db:migrate-trip-documents": "tsx --env-file-if-exists=.env.local src/server/migrate-trip-plan-documents.ts",
+    "db:reset-preview": "tsx --env-file-if-exists=.env.local src/server/reset-preview.ts",
+    "db:seed-preview": "tsx --env-file-if-exists=.env.local src/server/seed-preview.ts",
     "check": "pnpm generate-routes && prettier --check . && eslint . && pnpm typecheck && pnpm test && pnpm build"
   },
   "dependencies": {
