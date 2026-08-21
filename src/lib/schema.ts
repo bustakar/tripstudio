@@ -3,6 +3,7 @@ import {
   integer,
   jsonb,
   pgTable,
+  primaryKey,
   text,
   timestamp,
   uniqueIndex,
@@ -65,6 +66,46 @@ export type StoredTripPlanRow = typeof tripPlans.$inferSelect
 export type TripPlanRow = Omit<StoredTripPlanRow, 'document'> & {
   document: TripPlanDocument
 }
+
+export const tripPlanMembers = pgTable(
+  'trip_plan_members',
+  {
+    tripPlanId: uuid('trip_plan_id')
+      .notNull()
+      .references(() => tripPlans.id, { onDelete: 'cascade' }),
+    userId: text('user_id').notNull(),
+    role: text('role').notNull().default('editor'),
+    joinedAt: timestamp('joined_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.tripPlanId, table.userId] }),
+    index('trip_plan_members_user_idx').on(table.userId),
+  ],
+)
+
+export const tripPlanInvitations = pgTable(
+  'trip_plan_invitations',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    tripPlanId: uuid('trip_plan_id')
+      .notNull()
+      .references(() => tripPlans.id, { onDelete: 'cascade' }),
+    invitedByUserId: text('invited_by_user_id').notNull(),
+    tokenHash: text('token_hash').notNull(),
+    expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+    acceptedAt: timestamp('accepted_at', { withTimezone: true }),
+    acceptedByUserId: text('accepted_by_user_id'),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    uniqueIndex('trip_plan_invitations_token_hash_idx').on(table.tokenHash),
+    index('trip_plan_invitations_plan_idx').on(table.tripPlanId),
+  ],
+)
 
 export const tripPlanRevisions = pgTable(
   'trip_plan_revisions',

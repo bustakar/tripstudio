@@ -702,9 +702,9 @@ export function TripDetail({
               </Card>
             )}
             {view.stops.length === 0 && view.unassignedDays.length === 0 && (
-              <Card className="items-center py-12 text-center shadow-none">
+              <Card className="items-center gap-3 px-6 py-10 text-center shadow-none">
                 <MapPin className="size-5 text-muted-foreground" />
-                <CardHeader>
+                <CardHeader className="w-full max-w-sm gap-1 px-0">
                   <h3 className="font-semibold leading-none">
                     No days planned yet
                   </h3>

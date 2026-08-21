@@ -20,26 +20,26 @@ export type TripPlanWithRevisionHistory = TripPlanRevisionPage & {
 }
 
 export interface TripPlanRepository {
-  list: (ownerId: string) => Promise<TripPlanRow[]>
-  get: (ownerId: string, id: string) => Promise<TripPlanRow | null>
+  list: (userId: string) => Promise<TripPlanRow[]>
+  get: (userId: string, id: string) => Promise<TripPlanRow | null>
   create: (ownerId: string, input: CreateTripPlanInput) => Promise<TripPlanRow>
-  update: (ownerId: string, input: UpdateTripPlanInput) => Promise<TripPlanRow>
+  update: (userId: string, input: UpdateTripPlanInput) => Promise<TripPlanRow>
   getWithRevisionHistory: (
-    ownerId: string,
+    userId: string,
     id: string,
   ) => Promise<TripPlanWithRevisionHistory>
   listRevisions: (
-    ownerId: string,
+    userId: string,
     id: string,
     beforeVersion?: number,
   ) => Promise<TripPlanRevisionPage>
   getRevision: (
-    ownerId: string,
+    userId: string,
     id: string,
     version: number,
   ) => Promise<TripPlanRevisionRow | null>
   restoreRevision: (
-    ownerId: string,
+    userId: string,
     input: RestoreTripPlanRevisionInput,
   ) => Promise<TripPlanRow>
 }

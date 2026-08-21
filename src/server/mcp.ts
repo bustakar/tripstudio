@@ -11,11 +11,13 @@ import {
   applyTripPlanChanges,
   applyTripPlanChangesInputSchema,
 } from '@/domain/trip-plan-changes'
+import { createTripPlanInvitationInputSchema } from '@/domain/trip-sharing'
 import { buildTripPlanView } from '@/domain/trip-plan-view'
 import { VersionConflictError } from '@/domain/trip-plan-repository'
 import { auth } from '@/lib/auth'
 import { mcpResource } from '@/lib/env'
 import { tripPlanRepository } from '@/server/postgres-trip-plan-repository'
+import { tripSharingRepository } from '@/server/trip-sharing-repository'
 
 function json(value: unknown) {
   return JSON.parse(JSON.stringify(value)) as Record<string, unknown>
@@ -84,6 +86,22 @@ function createTripStudioServer(ownerId: string) {
     async (input) =>
       toolResult({
         plan: agentPlan(await tripPlanRepository.create(ownerId, input)),
+      }),
+  )
+
+  server.registerTool(
+    'create_trip_plan_invitation',
+    {
+      description:
+        'Create a seven-day, single-use invitation link for a trip owned by the current user. Return the link for the user to share.',
+      inputSchema: createTripPlanInvitationInputSchema,
+    },
+    async (input) =>
+      toolResult({
+        invitation: await tripSharingRepository.createInvitation(
+          ownerId,
+          input,
+        ),
       }),
   )
 

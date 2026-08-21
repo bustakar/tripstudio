@@ -1,6 +1,6 @@
 ---
 name: plan-trip
-description: Plan a trip naturally while keeping a private Trip Studio project current. Use when the User wants to start, explore, resume, organize, or revise a trip.
+description: Plan a trip naturally while keeping a Trip Studio project current. Use when the User wants to start, explore, resume, organize, revise, or share a trip.
 ---
 
 # Plan Trip
@@ -34,6 +34,9 @@ Never announce a workflow phase or interrogate the User.
    replace the complete document unless explicitly repairing or importing it.
 7. Treat a version conflict as a reason to reread and reconcile, never overwrite.
 8. Describe a save as successful only when the tool returns a committed version.
+9. When the User asks to share a trip, resolve the project, then use
+   `create_trip_plan_invitation`. Explain that the returned single-use link lasts seven days. Never
+   claim the invitation was sent; Trip Studio returns the link for the User to share privately.
 
 ## Boundaries and recovery
 
