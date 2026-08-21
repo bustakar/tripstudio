@@ -10,7 +10,6 @@ import {
 import type {
   CreateTripPlanInput,
   RestoreTripPlanRevisionInput,
-  TripPlanSnapshot,
   UpdateTripPlanInput,
 } from '@/domain/trip-plan'
 import {
@@ -31,17 +30,6 @@ import type { StoredTripPlanRow, TripPlanRow } from '@/lib/schema'
 
 function normalizeRow(row: StoredTripPlanRow): TripPlanRow {
   return { ...row, document: normalizeTripPlanDocument(row.document) }
-}
-
-function snapshot(plan: TripPlanRow): TripPlanSnapshot {
-  return {
-    title: plan.title,
-    startDate: plan.startDate,
-    endDate: plan.endDate,
-    status: plan.status === 'archived' ? 'archived' : 'active',
-    planningBrief: plan.planningBrief,
-    document: tripPlanDocumentSchema.parse(plan.document),
-  }
 }
 
 const revisionPageSize = 20
@@ -93,30 +81,21 @@ export class PostgresTripPlanRepository implements TripPlanRepository {
   }
 
   async create(ownerId: string, input: CreateTripPlanInput) {
-    return db.transaction(async (transaction) => {
-      const plans = await transaction
-        .insert(tripPlans)
-        .values({
-          ownerId,
-          title: input.title,
-          planningBrief: input.planningBrief,
-          startDate: input.startDate,
-          endDate: input.endDate,
-          document: normalizeTripPlanDocument(
-            input.document ?? emptyTripPlanDocument(),
-          ),
-        })
-        .returning()
-      if (plans.length !== 1) throw new Error('Trip plan was not created')
-
-      const plan = normalizeRow(plans[0])
-      await transaction.insert(tripPlanRevisions).values({
-        tripPlanId: plan.id,
-        version: plan.version,
-        snapshot: snapshot(plan),
+    const plans = await db
+      .insert(tripPlans)
+      .values({
+        ownerId,
+        title: input.title,
+        planningBrief: input.planningBrief,
+        startDate: input.startDate,
+        endDate: input.endDate,
+        document: normalizeTripPlanDocument(
+          input.document ?? emptyTripPlanDocument(),
+        ),
       })
-      return plan
-    })
+      .returning()
+    if (plans.length !== 1) throw new Error('Trip plan was not created')
+    return normalizeRow(plans[0])
   }
 
   async update(ownerId: string, input: UpdateTripPlanInput) {
@@ -170,14 +149,7 @@ export class PostgresTripPlanRepository implements TripPlanRepository {
         )
         .returning()
       if (plans.length === 0) throw new VersionConflictError()
-
-      const plan = normalizeRow(plans[0])
-      await transaction.insert(tripPlanRevisions).values({
-        tripPlanId: plan.id,
-        version: plan.version,
-        snapshot: snapshot(plan),
-      })
-      return plan
+      return normalizeRow(plans[0])
     })
   }
 
@@ -308,14 +280,7 @@ export class PostgresTripPlanRepository implements TripPlanRepository {
         )
         .returning()
       if (plans.length === 0) throw new VersionConflictError()
-
-      const plan = normalizeRow(plans[0])
-      await transaction.insert(tripPlanRevisions).values({
-        tripPlanId: plan.id,
-        version: plan.version,
-        snapshot: snapshot(plan),
-      })
-      return plan
+      return normalizeRow(plans[0])
     })
   }
 }

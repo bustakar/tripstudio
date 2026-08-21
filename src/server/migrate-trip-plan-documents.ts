@@ -4,14 +4,9 @@ import { and, eq, sql } from 'drizzle-orm'
 import {
   migrateTripPlanDocumentV1,
   tripPlanDocumentV1Schema,
-  tripPlanSnapshotSchema,
 } from '@/domain/trip-plan'
 import { db, pool } from '@/lib/database'
-import {
-  tripPlanDocumentBackups,
-  tripPlanRevisions,
-  tripPlans,
-} from '@/lib/schema'
+import { tripPlanDocumentBackups, tripPlans } from '@/lib/schema'
 import { VersionConflictError } from '@/domain/trip-plan-repository'
 
 export async function migrateTripPlanDocumentsV1() {
@@ -48,22 +43,9 @@ export async function migrateTripPlanDocumentsV1() {
             sql`${tripPlans.document}->>'schemaVersion' = '1'`,
           ),
         )
-        .returning()
+        .returning({ id: tripPlans.id })
 
       if (updated.length !== 1) throw new VersionConflictError()
-
-      await transaction.insert(tripPlanRevisions).values({
-        tripPlanId: updated[0].id,
-        version: updated[0].version,
-        snapshot: tripPlanSnapshotSchema.parse({
-          title: updated[0].title,
-          startDate: updated[0].startDate,
-          endDate: updated[0].endDate,
-          status: updated[0].status,
-          planningBrief: updated[0].planningBrief,
-          document: updated[0].document,
-        }),
-      })
     })
   }
 

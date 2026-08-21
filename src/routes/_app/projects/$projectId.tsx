@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { createFileRoute, notFound, useRouter } from '@tanstack/react-router'
 import { ChevronDown } from 'lucide-react'
 
@@ -73,6 +73,7 @@ function TripVersionView({
   const [restoring, setRestoring] = useState(false)
   const [refreshFailed, setRefreshFailed] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const selectionRequest = useRef(0)
 
   const selectedTrip = selectedRevision
     ? {
@@ -91,7 +92,9 @@ function TripVersionView({
       }
 
   async function selectVersion(version: number) {
+    const request = ++selectionRequest.current
     if (version === plan.version) {
+      setLoadingVersion(null)
       setSelectedVersion(version)
       setSelectedRevision(null)
       setError(null)
@@ -105,16 +108,18 @@ function TripVersionView({
         data: { id: plan.id, revisionVersion: version },
       })
       if (revision === null) throw new Error('Revision not found')
+      if (request !== selectionRequest.current) return
       setSelectedVersion(version)
       setSelectedRevision(revision)
     } catch (caught) {
+      if (request !== selectionRequest.current) return
       setError(
         caught instanceof Error
           ? caught.message
           : 'That version could not be loaded.',
       )
     } finally {
-      setLoadingVersion(null)
+      if (request === selectionRequest.current) setLoadingVersion(null)
     }
   }
 
@@ -140,7 +145,7 @@ function TripVersionView({
   }
 
   async function restoreSelectedVersion() {
-    if (selectedVersion === plan.version) return
+    if (selectedVersion === plan.version || loadingVersion !== null) return
     setRestoring(true)
     setError(null)
     try {
@@ -230,7 +235,7 @@ function TripVersionView({
         <Button
           type="button"
           size="sm"
-          disabled={restoring || refreshFailed}
+          disabled={loadingVersion !== null || restoring || refreshFailed}
           onClick={restoreSelectedVersion}
         >
           {restoring ? 'Restoring…' : 'Restore'}

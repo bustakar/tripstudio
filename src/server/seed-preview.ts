@@ -1,13 +1,10 @@
 import { pathToFileURL } from 'node:url'
 import { eq } from 'drizzle-orm'
 
-import {
-  tripPlanDocumentSchema,
-  tripPlanSnapshotSchema,
-} from '@/domain/trip-plan'
+import { tripPlanDocumentSchema } from '@/domain/trip-plan'
 import { auth } from '@/lib/auth'
 import { db, pool } from '@/lib/database'
-import { tripPlanRevisions, tripPlans } from '@/lib/schema'
+import { tripPlans } from '@/lib/schema'
 import { previewTrips, previewUser } from '@/server/preview-fixtures'
 
 function requirePreviewEnvironment() {
@@ -39,24 +36,7 @@ export async function seedPreview() {
 
   await db.transaction(async (transaction) => {
     await transaction.delete(tripPlans).where(eq(tripPlans.ownerId, user.id))
-    const plans = await transaction
-      .insert(tripPlans)
-      .values(fixtures)
-      .returning()
-    await transaction.insert(tripPlanRevisions).values(
-      plans.map((plan) => ({
-        tripPlanId: plan.id,
-        version: plan.version,
-        snapshot: tripPlanSnapshotSchema.parse({
-          title: plan.title,
-          startDate: plan.startDate,
-          endDate: plan.endDate,
-          status: plan.status,
-          planningBrief: plan.planningBrief,
-          document: plan.document,
-        }),
-      })),
-    )
+    await transaction.insert(tripPlans).values(fixtures)
   })
 
   const seeded = await db
