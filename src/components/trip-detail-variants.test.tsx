@@ -24,6 +24,14 @@ describe('TripDetail', () => {
           ? { ...stop, notes: 'Stop line one\nStop line two' }
           : stop,
       ),
+      constraints: [
+        ...completePreviewTrip.document.constraints,
+        { id: 'constraint-lines', text: 'First constraint\nSecond line' },
+      ],
+      decisions: [
+        ...completePreviewTrip.document.decisions,
+        { id: 'decision-lines', text: 'First decision\nSecond line' },
+      ],
       stays: [
         ...completePreviewTrip.document.stays,
         {
@@ -60,20 +68,26 @@ describe('TripDetail', () => {
         (transport): TripPlanDocument['transports'][number] =>
           transport.id === 'route-train'
             ? { ...transport, from: '   ' }
-            : transport.id === 'route-unassigned'
+            : transport.id === 'route-car'
               ? {
                   ...transport,
-                  mode: 'ferry',
-                  from: 'Pier 1',
-                  to: 'Island harbor',
-                  date: '2026-11-17',
-                  startTime: '16:00',
-                  endTime: '17:00',
-                  notes: 'Boarding closes early.',
-                  bookingIds: ['booking-unlinked'],
-                  sourceIds: ['source-unlinked'],
+                  startTime:
+                    'after checking out and collecting all luggage from the hotel',
                 }
-              : transport,
+              : transport.id === 'route-unassigned'
+                ? {
+                    ...transport,
+                    mode: 'ferry',
+                    from: 'Pier 1',
+                    to: 'Island harbor',
+                    date: '2026-11-17',
+                    startTime: '16:00',
+                    endTime: '17:00',
+                    notes: 'Boarding closes early.',
+                    bookingIds: ['booking-unlinked'],
+                    sourceIds: ['source-unlinked'],
+                  }
+                : transport,
       ),
     }
 
@@ -83,7 +97,8 @@ describe('TripDetail', () => {
           title: completePreviewTrip.title,
           startDate: completePreviewTrip.startDate,
           endDate: completePreviewTrip.endDate,
-          planningBrief: completePreviewTrip.planningBrief,
+          planningBrief:
+            '## Overview\n\n- Keep it easy\n\n[Guide](https://example.com/guide)\n\n<script>alert("x")</script>',
           document,
         }}
       />,
@@ -92,6 +107,7 @@ describe('TripDetail', () => {
     expect(markup).toContain('<h1')
     expect(markup).toContain('<h3')
     expect(markup).toContain('<h4')
+    expect(markup).toMatch(/<h3[^>]*>Place not set<\/h3>/)
     expect(markup).toContain('Prefers early starts.')
     expect(markup).toContain('whitespace-normal')
     expect(markup).toContain('Asia/Tokyo')
@@ -108,6 +124,9 @@ describe('TripDetail', () => {
     expect(markup).toContain('This stay belongs to Kyoto, not this day’s stop.')
     expect(markup).toContain('Destination: Kyoto')
     expect(markup).toMatch(
+      /data-slot="badge"[^>]*whitespace-normal[^>]*>after checking out and collecting all luggage from the hotel/,
+    )
+    expect(markup).toMatch(
       /whitespace-pre-wrap[^>]*>Stop line one\nStop line two/,
     )
     expect(markup).toMatch(
@@ -116,6 +135,16 @@ describe('TripDetail', () => {
     expect(markup).toMatch(
       /whitespace-pre-wrap[^>]*>Stay line one\nStay line two/,
     )
+    expect(markup).toMatch(
+      /whitespace-pre-wrap[^>]*>• First constraint\nSecond line/,
+    )
+    expect(markup).toMatch(
+      /whitespace-pre-wrap[^>]*>• First decision\nSecond line/,
+    )
+    expect(markup).toMatch(/<h3[^>]*>Overview<\/h3>/)
+    expect(markup).toContain('<li>Keep it easy</li>')
+    expect(markup).toContain('href="https://example.com/guide"')
+    expect(markup).not.toContain('<script')
     expect(markup).toContain('Pier 1')
     expect(markup).toContain('Island harbor')
     expect(markup).toContain('16:00–17:00')

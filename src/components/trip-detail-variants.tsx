@@ -16,6 +16,7 @@ import {
   TrainFront,
   Users,
 } from 'lucide-react'
+import Markdown from 'react-markdown'
 
 import { Badge } from '@/components/ui/badge'
 import {
@@ -339,7 +340,14 @@ function TransportRow({
               </CardDescription>
             )}
           </div>
-          {schedule && <Badge variant="outline">{schedule}</Badge>}
+          {schedule && (
+            <Badge
+              className="h-auto max-w-full min-w-0 shrink whitespace-normal text-left"
+              variant="outline"
+            >
+              {schedule}
+            </Badge>
+          )}
         </div>
       </CardHeader>
       {(transport.notes ||
@@ -478,13 +486,15 @@ function Constraints({ document }: { document: TripPlanDocument }) {
   return (
     <Card className="gap-4 shadow-none">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-base">
+        <h2 className="flex items-center gap-2 text-base font-semibold leading-none">
           <BookOpen className="size-4" /> Keep in mind
-        </CardTitle>
+        </h2>
       </CardHeader>
       <CardContent className="grid gap-2 text-sm">
         {document.constraints.map(({ id, text }) => (
-          <p key={id}>• {text}</p>
+          <p className="whitespace-pre-wrap" key={id}>
+            • {text}
+          </p>
         ))}
       </CardContent>
     </Card>
@@ -496,17 +506,78 @@ function Decisions({ document }: { document: TripPlanDocument }) {
   return (
     <Card className="gap-4 shadow-none">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-base">
+        <h2 className="flex items-center gap-2 text-base font-semibold leading-none">
           <CircleCheck className="size-4" /> Decisions
-        </CardTitle>
+        </h2>
         <CardDescription>Choices already made for this trip.</CardDescription>
       </CardHeader>
       <CardContent className="grid gap-2 text-sm">
         {document.decisions.map(({ id, text }) => (
-          <p key={id}>• {text}</p>
+          <p className="whitespace-pre-wrap" key={id}>
+            • {text}
+          </p>
         ))}
       </CardContent>
     </Card>
+  )
+}
+
+function PlanningBrief({ children }: { children: string }) {
+  return (
+    <Markdown
+      components={{
+        h1: ({ children: content }) => (
+          <h3 className="text-base font-semibold">{content}</h3>
+        ),
+        h2: ({ children: content }) => (
+          <h3 className="text-base font-semibold">{content}</h3>
+        ),
+        h3: ({ children: content }) => (
+          <h4 className="text-sm font-semibold">{content}</h4>
+        ),
+        h4: ({ children: content }) => (
+          <h5 className="text-sm font-semibold">{content}</h5>
+        ),
+        h5: ({ children: content }) => (
+          <h6 className="text-sm font-semibold">{content}</h6>
+        ),
+        h6: ({ children: content }) => (
+          <h6 className="text-sm font-semibold">{content}</h6>
+        ),
+        p: ({ children: content }) => (
+          <p className="text-sm leading-6 text-muted-foreground">{content}</p>
+        ),
+        ul: ({ children: content }) => (
+          <ul className="list-disc space-y-1 pl-5 text-sm text-muted-foreground">
+            {content}
+          </ul>
+        ),
+        ol: ({ children: content }) => (
+          <ol className="list-decimal space-y-1 pl-5 text-sm text-muted-foreground">
+            {content}
+          </ol>
+        ),
+        a: ({ children: content, href }) => (
+          <a
+            className="font-medium text-foreground underline underline-offset-4"
+            href={href}
+            rel="noreferrer"
+            target="_blank"
+          >
+            {content}
+          </a>
+        ),
+        blockquote: ({ children: content }) => (
+          <blockquote className="border-l-2 pl-3 text-muted-foreground">
+            {content}
+          </blockquote>
+        ),
+        hr: () => <Separator />,
+      }}
+      skipHtml
+    >
+      {children}
+    </Markdown>
   )
 }
 
@@ -529,19 +600,19 @@ function UnlinkedDetails({
       {planningBrief.trim() && (
         <Card className="gap-4 shadow-none">
           <CardHeader>
-            <CardTitle className="text-lg">Trip notes</CardTitle>
+            <h2 className="text-lg font-semibold leading-none">Trip notes</h2>
           </CardHeader>
-          <CardContent>
-            <p className="whitespace-pre-wrap text-sm leading-6 text-muted-foreground">
-              {planningBrief}
-            </p>
+          <CardContent className="grid gap-3">
+            <PlanningBrief>{planningBrief}</PlanningBrief>
           </CardContent>
         </Card>
       )}
       {hasUnlinked && (
         <Card className="gap-4 shadow-none">
           <CardHeader>
-            <CardTitle className="text-lg">Not linked yet</CardTitle>
+            <h2 className="text-lg font-semibold leading-none">
+              Not linked yet
+            </h2>
             <CardDescription>
               Details saved to this trip but not assigned to a place or day.
             </CardDescription>
@@ -600,7 +671,9 @@ export function TripDetail({ trip }: { trip: TripDetailData }) {
             {view.unassignedDays.length > 0 && (
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-lg">Place not set</CardTitle>
+                  <h3 className="text-lg font-semibold leading-none">
+                    Place not set
+                  </h3>
                 </CardHeader>
                 <CardContent className="grid gap-4">
                   {view.unassignedDays.map((day) => (
@@ -613,7 +686,9 @@ export function TripDetail({ trip }: { trip: TripDetailData }) {
               <Card className="items-center py-12 text-center shadow-none">
                 <MapPin className="size-5 text-muted-foreground" />
                 <CardHeader>
-                  <CardTitle>No days planned yet</CardTitle>
+                  <h3 className="font-semibold leading-none">
+                    No days planned yet
+                  </h3>
                   <CardDescription>
                     Places and days will appear here as the trip takes shape.
                   </CardDescription>
