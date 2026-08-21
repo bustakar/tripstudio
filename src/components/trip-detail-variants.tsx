@@ -66,6 +66,7 @@ function formatDay(value: string) {
     date: new Intl.DateTimeFormat('en', {
       day: 'numeric',
       month: 'short',
+      year: 'numeric',
       timeZone: 'UTC',
     }).format(date),
   }

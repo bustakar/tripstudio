@@ -107,6 +107,7 @@ describe('TripDetail', () => {
     expect(markup).toContain('<h1')
     expect(markup).toContain('<h3')
     expect(markup).toContain('<h4')
+    expect(markup).toMatch(/<h4[^>]*>Nov 3, 2026/)
     expect(markup).toMatch(/<h3[^>]*>Place not set<\/h3>/)
     expect(markup).toContain('Prefers early starts.')
     expect(markup).toContain('whitespace-normal')
