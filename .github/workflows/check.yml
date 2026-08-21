@@ -130,12 +130,16 @@ jobs:
           api_key: ${{ secrets.NEON_API_KEY }}
           database: tripstudio
           role: tripstudio_owner
-          branch_type: schema-only
           expires_at: ${{ env.NEON_EXPIRES_AT }}
       - name: Mask Neon connection string
         run: echo "::add-mask::$DATABASE_URL"
         env:
           DATABASE_URL: ${{ steps.neon.outputs.db_url_pooled }}
+      - name: Clear inherited preview data
+        run: pnpm db:reset-preview
+        env:
+          DATABASE_URL: ${{ steps.neon.outputs.db_url_pooled }}
+          TRIPSTUDIO_PR_PREVIEW: 1
       - name: Deploy Preview
         id: deploy
         run: |

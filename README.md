@@ -46,8 +46,9 @@ compatible PostgreSQL provider.
 ## Pull request previews
 
 A maintainer can add the `preview:web` label to an internal pull request to create a disposable
-Vercel deployment backed by an isolated, schema-only Neon branch. Each deployment is seeded with
-two tracked demo trips and this public preview-only account:
+Vercel deployment backed by an isolated Neon branch. Inherited rows are cleared before deployment
+while migration history is preserved, then two tracked demo trips are seeded for this public
+preview-only account:
 
 ```text
 Email: preview@tripstudio.test
