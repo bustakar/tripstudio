@@ -1,10 +1,17 @@
 import {
   BedDouble,
+  Bike,
   BookOpen,
+  BusFront,
   CalendarDays,
+  CarFront,
   CircleCheck,
   ExternalLink,
+  Footprints,
   MapPin,
+  Plane,
+  Route,
+  Ship,
   TicketCheck,
   TrainFront,
   Users,
@@ -62,14 +69,47 @@ function formatDay(value: string) {
   }
 }
 
-function BookingBadges({ bookings }: { bookings: Booking[] }) {
+function formatTimeRange(startTime?: string, endTime?: string) {
+  if (startTime && endTime) return `${startTime}–${endTime}`
+  if (startTime) return startTime
+  if (endTime) return `Until ${endTime}`
+  return 'Anytime'
+}
+
+function BookingDetails({ bookings }: { bookings: Booking[] }) {
   if (bookings.length === 0) return null
   return (
-    <div className="flex flex-wrap gap-2">
+    <div className="grid gap-2">
       {bookings.map((booking) => (
-        <Badge key={booking.id} variant="secondary">
-          <TicketCheck /> {booking.title} · {booking.status}
-        </Badge>
+        <Card
+          className="gap-2 rounded-md bg-muted/30 p-3 py-3 shadow-none"
+          key={booking.id}
+        >
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <p className="flex items-center gap-2 text-sm font-medium">
+              <TicketCheck className="size-4 text-muted-foreground" />
+              {booking.title}
+            </p>
+            <Badge className="capitalize" variant="outline">
+              {booking.status}
+            </Badge>
+          </div>
+          <p className="text-xs capitalize text-muted-foreground">
+            {booking.kind} booking
+            {booking.provider ? ` · ${booking.provider}` : ''}
+          </p>
+          {booking.reference && (
+            <p className="text-sm">
+              <span className="font-medium">Reference:</span>{' '}
+              {booking.reference}
+            </p>
+          )}
+          {booking.notes && (
+            <p className="whitespace-pre-wrap text-sm text-muted-foreground">
+              {booking.notes}
+            </p>
+          )}
+        </Card>
       ))}
     </div>
   )
@@ -109,11 +149,11 @@ function StayRow({ stay }: { stay: Stay }) {
             <p className="text-xs text-muted-foreground">{stay.place}</p>
           )}
         </div>
-        {stay.booking && <Badge variant="outline">{stay.booking.status}</Badge>}
       </div>
       {stay.notes && (
         <p className="text-sm text-muted-foreground">{stay.notes}</p>
       )}
+      <BookingDetails bookings={stay.booking ? [stay.booking] : []} />
       <SourceLinks sources={stay.sources} />
     </div>
   )
@@ -146,7 +186,7 @@ function DayCard({ day }: { day: DayView }) {
                 key={item.id}
               >
                 <div className="text-sm font-medium text-muted-foreground">
-                  {item.startTime ?? 'Anytime'}
+                  {formatTimeRange(item.startTime, item.endTime)}
                 </div>
                 <div className="grid gap-2">
                   <div>
@@ -155,6 +195,11 @@ function DayCard({ day }: { day: DayView }) {
                         ? item.title
                         : item.title || item.mode || 'Local transport'}
                     </p>
+                    {item.kind === 'activity' && item.place && (
+                      <p className="text-sm text-muted-foreground">
+                        {item.place}
+                      </p>
+                    )}
                     {item.kind === 'transport' && (item.from || item.to) && (
                       <p className="text-sm text-muted-foreground">
                         {item.from ?? 'Origin not set'} →{' '}
@@ -167,7 +212,7 @@ function DayCard({ day }: { day: DayView }) {
                       </p>
                     )}
                   </div>
-                  <BookingBadges bookings={item.bookings} />
+                  <BookingDetails bookings={item.bookings} />
                   <SourceLinks sources={item.sources} />
                 </div>
               </div>
@@ -176,7 +221,7 @@ function DayCard({ day }: { day: DayView }) {
         ) : (
           <p className="text-sm text-muted-foreground">No plans yet.</p>
         )}
-        <BookingBadges bookings={day.bookings} />
+        <BookingDetails bookings={day.bookings} />
         <SourceLinks sources={day.sources} />
         {day.overnightStay && <StayRow stay={day.overnightStay} />}
       </CardContent>
@@ -184,43 +229,79 @@ function DayCard({ day }: { day: DayView }) {
   )
 }
 
+function TransportModeIcon({ mode }: { mode: Transport['mode'] }) {
+  const className = 'size-4'
+  switch (mode) {
+    case 'walk':
+      return <Footprints className={className} />
+    case 'bike':
+      return <Bike className={className} />
+    case 'car':
+    case 'taxi':
+      return <CarFront className={className} />
+    case 'bus':
+      return <BusFront className={className} />
+    case 'train':
+      return <TrainFront className={className} />
+    case 'flight':
+      return <Plane className={className} />
+    case 'ferry':
+      return <Ship className={className} />
+    default:
+      return <Route className={className} />
+  }
+}
+
 function TransportRow({
   transport,
   stopNames,
+  embedded = false,
 }: {
   transport: Transport
   stopNames: Map<string, string>
+  embedded?: boolean
 }) {
-  const from = transport.fromStopId
-    ? stopNames.get(transport.fromStopId)
-    : transport.from
-  const to = transport.toStopId
-    ? stopNames.get(transport.toStopId)
-    : transport.to
+  const from =
+    transport.from ??
+    (transport.fromStopId ? stopNames.get(transport.fromStopId) : undefined)
+  const to =
+    transport.to ??
+    (transport.toStopId ? stopNames.get(transport.toStopId) : undefined)
+  const schedule = [
+    transport.date ? formatDate(transport.date) : undefined,
+    transport.startTime || transport.endTime
+      ? formatTimeRange(transport.startTime, transport.endTime)
+      : undefined,
+  ]
+    .filter(Boolean)
+    .join(' · ')
   return (
-    <Card className="mx-3 gap-3 border-dashed bg-muted/30 py-4 shadow-none sm:mx-8">
+    <Card
+      className={`${embedded ? '' : 'mx-3 sm:mx-8'} gap-3 border-dashed bg-muted/30 py-4 shadow-none`}
+    >
       <CardHeader className="px-4">
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <Badge variant="secondary" className="size-9 rounded-full p-0">
-            <TrainFront />
+            <TransportModeIcon mode={transport.mode} />
           </Badge>
           <div className="min-w-0 flex-1">
-            <CardTitle className="text-sm">
-              {transport.title || transport.mode || 'Travel'}
-            </CardTitle>
+            <div className="flex flex-wrap items-center gap-2">
+              <CardTitle className="text-sm">
+                {transport.title || transport.mode || 'Travel'}
+              </CardTitle>
+              {transport.mode && (
+                <Badge className="capitalize" variant="outline">
+                  {transport.mode}
+                </Badge>
+              )}
+            </div>
             {(from || to) && (
               <CardDescription>
                 {from ?? 'Origin not set'} → {to ?? 'Destination not set'}
               </CardDescription>
             )}
           </div>
-          {(transport.date || transport.startTime) && (
-            <Badge variant="outline">
-              {transport.date ? formatDate(transport.date) : ''}
-              {transport.date && transport.startTime ? ' · ' : ''}
-              {transport.startTime ?? ''}
-            </Badge>
-          )}
+          {schedule && <Badge variant="outline">{schedule}</Badge>}
         </div>
       </CardHeader>
       {(transport.notes ||
@@ -228,9 +309,11 @@ function TransportRow({
         transport.sources.length > 0) && (
         <CardContent className="grid gap-2 px-4">
           {transport.notes && (
-            <p className="text-sm text-muted-foreground">{transport.notes}</p>
+            <p className="whitespace-pre-wrap text-sm text-muted-foreground">
+              {transport.notes}
+            </p>
           )}
-          <BookingBadges bookings={transport.bookings} />
+          <BookingDetails bookings={transport.bookings} />
           <SourceLinks sources={transport.sources} />
         </CardContent>
       )}
@@ -254,6 +337,7 @@ function StopCard({
         <CardDescription>
           {stop.days.length} {stop.days.length === 1 ? 'day' : 'days'}
           {stop.country ? ` · ${stop.country}` : ''}
+          {stop.timezone ? ` · ${stop.timezone}` : ''}
         </CardDescription>
         <SourceLinks sources={stop.sources} />
       </CardHeader>
@@ -287,38 +371,57 @@ function TripOverview({ trip }: { trip: TripDetailData }) {
     <Card className="gap-5">
       <CardHeader>
         <CardDescription>Trip plan</CardDescription>
-        <CardTitle className="text-3xl tracking-tight sm:text-4xl">
+        <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
           {trip.title}
-        </CardTitle>
+        </h1>
       </CardHeader>
-      <CardContent className="flex flex-wrap gap-2">
-        {(trip.startDate || trip.endDate) && (
-          <Badge variant="secondary">
-            <CalendarDays />
-            {trip.startDate ? formatDate(trip.startDate) : 'Start not set'}
-            {trip.endDate && trip.endDate !== trip.startDate
-              ? ` – ${formatDate(trip.endDate)}`
-              : ''}
-          </Badge>
-        )}
-        {trip.document.travelers.length > 0 && (
-          <Badge variant="secondary">
-            <Users />
-            {trip.document.travelers.map(({ name }) => name).join(', ')}
-          </Badge>
-        )}
-        {trip.document.stops.length > 0 && (
-          <Badge variant="secondary">
-            <MapPin /> {trip.document.stops.length}{' '}
-            {trip.document.stops.length === 1 ? 'stop' : 'stops'}
-          </Badge>
-        )}
-        {trip.document.bookings.length > 0 && (
-          <Badge variant="secondary">
-            <TicketCheck /> {trip.document.bookings.length}{' '}
-            {trip.document.bookings.length === 1 ? 'booking' : 'bookings'}
-            {confirmed > 0 ? ` · ${confirmed} confirmed` : ''}
-          </Badge>
+      <CardContent className="grid gap-4">
+        <div className="flex flex-wrap gap-2">
+          {(trip.startDate || trip.endDate) && (
+            <Badge variant="secondary">
+              <CalendarDays />
+              {trip.startDate ? formatDate(trip.startDate) : 'Start not set'}
+              {trip.endDate && trip.endDate !== trip.startDate
+                ? ` – ${formatDate(trip.endDate)}`
+                : ''}
+            </Badge>
+          )}
+          {trip.document.travelers.length > 0 && (
+            <Badge variant="secondary">
+              <Users />
+              {trip.document.travelers.map(({ name }) => name).join(', ')}
+            </Badge>
+          )}
+          {trip.document.stops.length > 0 && (
+            <Badge variant="secondary">
+              <MapPin /> {trip.document.stops.length}{' '}
+              {trip.document.stops.length === 1 ? 'stop' : 'stops'}
+            </Badge>
+          )}
+          {trip.document.bookings.length > 0 && (
+            <Badge variant="secondary">
+              <TicketCheck /> {trip.document.bookings.length}{' '}
+              {trip.document.bookings.length === 1 ? 'booking' : 'bookings'}
+              {confirmed > 0 ? ` · ${confirmed} confirmed` : ''}
+            </Badge>
+          )}
+        </div>
+        {trip.document.travelers.some(({ notes }) => notes) && (
+          <div className="grid gap-2 border-t pt-4">
+            {trip.document.travelers.map((traveler) =>
+              traveler.notes ? (
+                <div className="flex gap-2 text-sm" key={traveler.id}>
+                  <Users className="mt-0.5 size-4 text-muted-foreground" />
+                  <p>
+                    <span className="font-medium">{traveler.name}:</span>{' '}
+                    <span className="whitespace-pre-wrap text-muted-foreground">
+                      {traveler.notes}
+                    </span>
+                  </p>
+                </div>
+              ) : null,
+            )}
+          </div>
         )}
       </CardContent>
     </Card>
@@ -365,9 +468,11 @@ function Decisions({ document }: { document: TripPlanDocument }) {
 function UnlinkedDetails({
   view,
   planningBrief,
+  stopNames,
 }: {
   view: TripView
   planningBrief: string
+  stopNames: Map<string, string>
 }) {
   const hasUnlinked =
     view.unlinkedBookings.length > 0 ||
@@ -397,12 +502,15 @@ function UnlinkedDetails({
             </CardDescription>
           </CardHeader>
           <CardContent className="grid gap-3">
-            <BookingBadges bookings={view.unlinkedBookings} />
+            <BookingDetails bookings={view.unlinkedBookings} />
             <SourceLinks sources={view.unlinkedSources} />
             {view.unassignedTransports.map((transport) => (
-              <p className="text-sm" key={transport.id}>
-                {transport.title || transport.mode || 'Transport'}
-              </p>
+              <TransportRow
+                embedded
+                key={transport.id}
+                stopNames={stopNames}
+                transport={transport}
+              />
             ))}
           </CardContent>
         </Card>
@@ -471,7 +579,11 @@ export function TripDetail({ trip }: { trip: TripDetailData }) {
         </section>
         <Decisions document={trip.document} />
         <Separator />
-        <UnlinkedDetails planningBrief={trip.planningBrief} view={view} />
+        <UnlinkedDetails
+          planningBrief={trip.planningBrief}
+          stopNames={stopNames}
+          view={view}
+        />
       </div>
     </article>
   )
