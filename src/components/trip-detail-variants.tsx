@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import {
   BedDouble,
   Bike,
@@ -412,17 +413,28 @@ function StopCard({
   )
 }
 
-function TripOverview({ trip }: { trip: TripDetailData }) {
+function TripOverview({
+  trip,
+  headerAction,
+}: {
+  trip: TripDetailData
+  headerAction?: ReactNode
+}) {
   const confirmed = trip.document.bookings.filter(
     ({ status }) => status === 'confirmed',
   ).length
   return (
     <Card className="gap-5">
       <CardHeader>
-        <CardDescription>Trip plan</CardDescription>
-        <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
-          {trip.title}
-        </h1>
+        <div className="flex flex-col items-start justify-between gap-4 sm:flex-row">
+          <div className="min-w-0">
+            <CardDescription>Trip plan</CardDescription>
+            <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
+              {trip.title}
+            </h1>
+          </div>
+          {headerAction}
+        </div>
       </CardHeader>
       <CardContent className="grid gap-4">
         <div className="flex flex-wrap gap-2">
@@ -636,13 +648,19 @@ function UnlinkedDetails({
   )
 }
 
-export function TripDetail({ trip }: { trip: TripDetailData }) {
+export function TripDetail({
+  trip,
+  headerAction,
+}: {
+  trip: TripDetailData
+  headerAction?: ReactNode
+}) {
   const view = buildTripPlanView(trip.document)
   const stopNames = new Map(view.stops.map((stop) => [stop.id, stop.name]))
   return (
     <article className="min-h-full bg-background text-foreground">
       <div className="mx-auto grid w-full max-w-4xl gap-8 px-4 py-6 sm:px-8 sm:py-10">
-        <TripOverview trip={trip} />
+        <TripOverview headerAction={headerAction} trip={trip} />
         <Constraints document={trip.document} />
         <section className="grid gap-5">
           <div>
