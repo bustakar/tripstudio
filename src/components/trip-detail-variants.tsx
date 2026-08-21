@@ -166,6 +166,12 @@ function StayRow({ stay }: { stay: Stay }) {
       {stay.notes && (
         <p className="text-sm text-muted-foreground">{stay.notes}</p>
       )}
+      {stay.stopMismatch && (
+        <p className="text-sm font-medium text-destructive">
+          This stay belongs to {stay.stopName ?? stay.stopId}, not this day’s
+          stop.
+        </p>
+      )}
       <BookingDetails bookings={stay.booking ? [stay.booking] : []} />
       <SourceLinks sources={stay.sources} />
     </div>

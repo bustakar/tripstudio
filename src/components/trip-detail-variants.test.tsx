@@ -19,8 +19,19 @@ describe('TripDetail', () => {
           name: 'A traveler with a deliberately very long display name',
         },
       ],
+      stays: [
+        ...completePreviewTrip.document.stays,
+        {
+          id: 'stay-cross-stop',
+          stopId: 'stop-kyoto',
+          title: 'Wrong-city hotel',
+          sourceIds: [],
+        },
+      ],
       days: completePreviewTrip.document.days.map((day) => ({
         ...day,
+        overnightStayId:
+          day.id === 'day-tokyo-1' ? 'stay-cross-stop' : day.overnightStayId,
         items: day.items.map((item) =>
           item.id === 'transport-taxi'
             ? {
@@ -82,6 +93,7 @@ describe('TripDetail', () => {
     expect(markup).toContain('Example Hotels')
     expect(markup).toContain('DEMO-STAY')
     expect(markup).toContain('Breakfast included.')
+    expect(markup).toContain('This stay belongs to Kyoto, not this day’s stop.')
     expect(markup).toContain('Pier 1')
     expect(markup).toContain('Island harbor')
     expect(markup).toContain('16:00–17:00')
