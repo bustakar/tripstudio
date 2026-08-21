@@ -164,7 +164,7 @@ export const tripPlanDocumentSchema = z
   })
   .superRefine((document, context) => {
     const stopIds = new Set(document.stops.map(({ id }) => id))
-    const stayIds = new Set(document.stays.map(({ id }) => id))
+    const staysById = new Map(document.stays.map((stay) => [stay.id, stay]))
     const bookingIds = new Set(document.bookings.map(({ id }) => id))
     const sourceIds = new Set(document.sources.map(({ id }) => id))
 
@@ -249,13 +249,22 @@ export const tripPlanDocumentSchema = z
           'stop',
           day.stopId,
         )
-      if (day.overnightStayId && !stayIds.has(day.overnightStayId))
-        addMissingReferenceIssue(
-          context,
-          ['days', dayIndex, 'overnightStayId'],
-          'stay',
-          day.overnightStayId,
-        )
+      if (day.overnightStayId) {
+        const stay = staysById.get(day.overnightStayId)
+        if (!stay)
+          addMissingReferenceIssue(
+            context,
+            ['days', dayIndex, 'overnightStayId'],
+            'stay',
+            day.overnightStayId,
+          )
+        else if (day.stopId && stay.stopId !== day.stopId)
+          context.addIssue({
+            code: 'custom',
+            path: ['days', dayIndex, 'overnightStayId'],
+            message: `Stay ${stay.id} belongs to stop ${stay.stopId}, not ${day.stopId}`,
+          })
+      }
       for (const bookingId of day.bookingIds) {
         if (!bookingIds.has(bookingId))
           addMissingReferenceIssue(

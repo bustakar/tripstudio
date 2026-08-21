@@ -40,6 +40,7 @@ export type TripDetailData = {
 type TripView = ReturnType<typeof buildTripPlanView>
 type StopView = TripView['stops'][number]
 type DayView = StopView['days'][number]
+type DayItemView = DayView['items'][number]
 type Booking = TripPlanDocument['bookings'][number]
 type Source = TripPlanDocument['sources'][number]
 type Stay = NonNullable<DayView['overnightStay']>
@@ -79,6 +80,13 @@ function formatTimeRange(startTime?: string, endTime?: string) {
 function nonBlank(value?: string) {
   const trimmed = value?.trim()
   return trimmed || undefined
+}
+
+function formatDayItemSchedule(item: DayItemView) {
+  const time = formatTimeRange(item.startTime, item.endTime)
+  return item.kind === 'transport' && item.date
+    ? `${formatDate(item.date)} · ${time}`
+    : time
 }
 
 function BookingDetails({ bookings }: { bookings: Booking[] }) {
@@ -164,6 +172,50 @@ function StayRow({ stay }: { stay: Stay }) {
   )
 }
 
+function DayItemRow({ item }: { item: DayItemView }) {
+  const from = item.kind === 'transport' ? nonBlank(item.from) : undefined
+  const to = item.kind === 'transport' ? nonBlank(item.to) : undefined
+
+  return (
+    <div className="grid gap-1 sm:grid-cols-[8rem_1fr]">
+      <div className="text-sm font-medium text-muted-foreground">
+        {formatDayItemSchedule(item)}
+      </div>
+      <div className="grid gap-2">
+        <div>
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="text-sm font-medium">
+              {item.kind === 'activity'
+                ? item.title
+                : item.title || item.mode || 'Local transport'}
+            </p>
+            {item.kind === 'transport' && item.title && item.mode && (
+              <Badge className="capitalize" variant="outline">
+                {item.mode}
+              </Badge>
+            )}
+          </div>
+          {item.kind === 'activity' && item.place && (
+            <p className="text-sm text-muted-foreground">{item.place}</p>
+          )}
+          {item.kind === 'transport' && (from || to) && (
+            <p className="text-sm text-muted-foreground">
+              {from ?? 'Origin not set'} → {to ?? 'Destination not set'}
+            </p>
+          )}
+          {item.notes && (
+            <p className="mt-1 whitespace-pre-wrap text-sm leading-6 text-muted-foreground">
+              {item.notes}
+            </p>
+          )}
+        </div>
+        <BookingDetails bookings={item.bookings} />
+        <SourceLinks sources={item.sources} />
+      </div>
+    </div>
+  )
+}
+
 function DayCard({ day }: { day: DayView }) {
   const formatted = formatDay(day.date)
   return (
@@ -172,13 +224,11 @@ function DayCard({ day }: { day: DayView }) {
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <Badge variant="outline">{formatted.weekday}</Badge>
-            <CardTitle className="text-sm">{formatted.date}</CardTitle>
+            <h4 className="text-sm font-semibold leading-none">
+              {formatted.date}
+              {day.title ? ` · ${day.title}` : ''}
+            </h4>
           </div>
-          {day.title && (
-            <CardDescription className="text-foreground">
-              {day.title}
-            </CardDescription>
-          )}
         </div>
         {day.notes && <CardDescription>{day.notes}</CardDescription>}
       </CardHeader>
@@ -186,48 +236,7 @@ function DayCard({ day }: { day: DayView }) {
         {day.items.length > 0 ? (
           <div className="grid gap-4">
             {day.items.map((item) => (
-              <div
-                className="grid gap-1 sm:grid-cols-[4.5rem_1fr]"
-                key={item.id}
-              >
-                <div className="text-sm font-medium text-muted-foreground">
-                  {formatTimeRange(item.startTime, item.endTime)}
-                </div>
-                <div className="grid gap-2">
-                  <div>
-                    <div className="flex flex-wrap items-center gap-2">
-                      <p className="text-sm font-medium">
-                        {item.kind === 'activity'
-                          ? item.title
-                          : item.title || item.mode || 'Local transport'}
-                      </p>
-                      {item.kind === 'transport' && item.title && item.mode && (
-                        <Badge className="capitalize" variant="outline">
-                          {item.mode}
-                        </Badge>
-                      )}
-                    </div>
-                    {item.kind === 'activity' && item.place && (
-                      <p className="text-sm text-muted-foreground">
-                        {item.place}
-                      </p>
-                    )}
-                    {item.kind === 'transport' && (item.from || item.to) && (
-                      <p className="text-sm text-muted-foreground">
-                        {item.from ?? 'Origin not set'} →{' '}
-                        {item.to ?? 'Destination not set'}
-                      </p>
-                    )}
-                    {item.notes && (
-                      <p className="mt-1 whitespace-pre-wrap text-sm leading-6 text-muted-foreground">
-                        {item.notes}
-                      </p>
-                    )}
-                  </div>
-                  <BookingDetails bookings={item.bookings} />
-                  <SourceLinks sources={item.sources} />
-                </div>
-              </div>
+              <DayItemRow item={item} key={item.id} />
             ))}
           </div>
         ) : (
@@ -343,9 +352,9 @@ function StopCard({
   return (
     <Card>
       <CardHeader className="border-b">
-        <CardTitle className="flex items-center gap-2 text-xl">
+        <h3 className="flex items-center gap-2 text-xl font-semibold leading-none">
           <MapPin className="size-5" /> {stop.name}
-        </CardTitle>
+        </h3>
         <CardDescription>
           {stop.days.length} {stop.days.length === 1 ? 'day' : 'days'}
           {stop.country ? ` · ${stop.country}` : ''}
@@ -399,9 +408,14 @@ function TripOverview({ trip }: { trip: TripDetailData }) {
             </Badge>
           )}
           {trip.document.travelers.length > 0 && (
-            <Badge variant="secondary">
-              <Users />
-              {trip.document.travelers.map(({ name }) => name).join(', ')}
+            <Badge
+              className="h-auto max-w-full min-w-0 shrink whitespace-normal"
+              variant="secondary"
+            >
+              <Users className="shrink-0" />
+              <span className="min-w-0 break-words text-left">
+                {trip.document.travelers.map(({ name }) => name).join(', ')}
+              </span>
             </Badge>
           )}
           {trip.document.stops.length > 0 && (

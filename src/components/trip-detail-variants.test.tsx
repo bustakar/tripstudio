@@ -12,11 +12,24 @@ describe('TripDetail', () => {
   it('keeps supported linked and unassigned details visible', () => {
     const document: TripPlanDocument = {
       ...completePreviewTrip.document,
+      travelers: [
+        ...completePreviewTrip.document.travelers,
+        {
+          id: 'traveler-long-name',
+          name: 'A traveler with a deliberately very long display name',
+        },
+      ],
       days: completePreviewTrip.document.days.map((day) => ({
         ...day,
         items: day.items.map((item) =>
           item.id === 'transport-taxi'
-            ? { ...item, title: 'Airport transfer' }
+            ? {
+                ...item,
+                title: 'Airport transfer',
+                from: '   ',
+                to: 'Hotel',
+                date: '2026-11-05',
+              }
             : item,
         ),
       })),
@@ -54,11 +67,16 @@ describe('TripDetail', () => {
     )
 
     expect(markup).toContain('<h1')
+    expect(markup).toContain('<h3')
+    expect(markup).toContain('<h4')
     expect(markup).toContain('Prefers early starts.')
+    expect(markup).toContain('whitespace-normal')
     expect(markup).toContain('Asia/Tokyo')
     expect(markup).toContain('10:00–15:00')
     expect(markup).toContain('Yanaka')
     expect(markup).toMatch(/Airport transfer[\s\S]*?>taxi</)
+    expect(markup).toContain('Nov 5, 2026 · Anytime')
+    expect(markup).toContain('Origin not set → Hotel')
     expect(markup).toContain('Tokyo → Kiso')
     expect(markup).not.toContain('Origin not set → Kiso')
     expect(markup).toContain('Example Hotels')

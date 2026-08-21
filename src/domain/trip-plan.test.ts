@@ -253,6 +253,37 @@ describe('Trip Plan contract', () => {
     ).toThrow('Unknown stop missing')
   })
 
+  it('rejects overnight stays belonging to another stop', () => {
+    expect(() =>
+      tripPlanDocumentSchema.parse({
+        ...emptyTripPlanDocument(),
+        stops: [
+          { id: 'tokyo', position: 0, name: 'Tokyo', sourceIds: [] },
+          { id: 'kyoto', position: 1, name: 'Kyoto', sourceIds: [] },
+        ],
+        days: [
+          {
+            id: 'day-1',
+            stopId: 'tokyo',
+            date: '2026-11-03',
+            overnightStayId: 'kyoto-hotel',
+            items: [],
+            bookingIds: [],
+            sourceIds: [],
+          },
+        ],
+        stays: [
+          {
+            id: 'kyoto-hotel',
+            stopId: 'kyoto',
+            title: 'Kyoto hotel',
+            sourceIds: [],
+          },
+        ],
+      }),
+    ).toThrow('Stay kyoto-hotel belongs to stop kyoto, not tokyo')
+  })
+
   it('validates stop ordering and source links', () => {
     const stop = {
       id: 'kyoto',
