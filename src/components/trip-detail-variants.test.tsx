@@ -93,6 +93,7 @@ describe('TripDetail', () => {
 
     const markup = renderToStaticMarkup(
       <TripDetail
+        headerAction={<button type="button">Version 1</button>}
         trip={{
           title: completePreviewTrip.title,
           startDate: completePreviewTrip.startDate,
@@ -152,6 +153,7 @@ describe('TripDetail', () => {
     expect(markup).toContain('Boarding closes early.')
     expect(markup).toContain('Cancelled idea')
     expect(markup).toContain('Unsorted research note')
+    expect(markup).toContain('Version 1')
   })
 
   it('uses singular summary labels', () => {

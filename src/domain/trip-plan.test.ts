@@ -5,7 +5,9 @@ import {
   emptyTripPlanDocument,
   migrateTripPlanDocumentV1,
   planningBriefMaxLength,
+  restoreTripPlanRevisionInputSchema,
   tripPlanDocumentSchema,
+  tripPlanSnapshotSchema,
   updateTripPlanInputSchema,
 } from '@/domain/trip-plan'
 
@@ -277,5 +279,50 @@ describe('Trip Plan contract', () => {
         ],
       }),
     ).toThrow('Duplicate stop position 0')
+  })
+
+  it('validates complete immutable snapshots', () => {
+    expect(
+      tripPlanSnapshotSchema.parse({
+        title: 'Japan',
+        startDate: null,
+        endDate: null,
+        status: 'active',
+        planningBrief: '',
+        document: emptyTripPlanDocument(),
+      }),
+    ).toMatchObject({ title: 'Japan', status: 'active' })
+  })
+
+  it('accepts legacy documents in backfilled snapshots', () => {
+    expect(
+      tripPlanSnapshotSchema.parse({
+        title: 'Japan',
+        startDate: null,
+        endDate: null,
+        status: 'active',
+        planningBrief: '',
+        document: {
+          schemaVersion: 1,
+          travelers: [],
+          destinations: [],
+          itinerary: [],
+          bookings: [],
+          constraints: [],
+          decisions: [],
+          sources: [],
+        },
+      }).document.schemaVersion,
+    ).toBe(1)
+  })
+
+  it('restores a positive revision against the current version', () => {
+    expect(
+      restoreTripPlanRevisionInputSchema.parse({
+        id: '93a58652-8754-4e7d-b46f-9f475315f84d',
+        expectedVersion: 4,
+        revisionVersion: 2,
+      }),
+    ).toMatchObject({ expectedVersion: 4, revisionVersion: 2 })
   })
 })

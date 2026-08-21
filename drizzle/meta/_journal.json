@@ -15,6 +15,13 @@
       "when": 1787252871914,
       "tag": "0001_misty_doomsday",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1787310346585,
+      "tag": "0002_chilly_dragon_man",
+      "breakpoints": true
     }
   ]
 }
