@@ -189,13 +189,21 @@ function TripVersionView({
           status: plan.status === 'active' ? 'archived' : 'active',
         },
       })
-      await router.invalidate()
     } catch (caught) {
       setError(
         caught instanceof Error
           ? caught.message
           : 'The project status could not be changed.',
       )
+      setChangingStatus(false)
+      return
+    }
+
+    try {
+      await router.invalidate()
+    } catch {
+      setRefreshFailed(true)
+      setError('The project status changed, but the page could not refresh.')
     } finally {
       setChangingStatus(false)
     }

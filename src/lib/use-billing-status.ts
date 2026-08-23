@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react'
 
 import { authClient } from '@/lib/auth-client'
+import { billingStatusFromSubscriptions } from '@/domain/billing'
 
-export type BillingStatus = 'loading' | 'free' | 'pro' | 'unavailable'
+export type BillingStatus =
+  'loading' | 'free' | 'manage' | 'pro' | 'unavailable'
 
 export function useBillingStatus() {
   const [status, setStatus] = useState<BillingStatus>('loading')
@@ -12,15 +14,7 @@ export function useBillingStatus() {
     void authClient.subscription.list().then(({ data, error }) => {
       if (!current) return
       if (error) return setStatus('unavailable')
-      setStatus(
-        data.some(
-          (subscription) =>
-            subscription.status === 'active' ||
-            subscription.status === 'trialing',
-        )
-          ? 'pro'
-          : 'free',
-      )
+      setStatus(billingStatusFromSubscriptions(data))
     })
     return () => {
       current = false

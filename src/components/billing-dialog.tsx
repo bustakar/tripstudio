@@ -27,6 +27,7 @@ export function BillingDialog({
   const [error, setError] = useState<string | null>(null)
   const [price, setPrice] = useState<string | null>(null)
   const pro = billing === 'pro'
+  const canManage = pro || billing === 'manage'
 
   useEffect(() => {
     if (!open || billing !== 'free') return
@@ -48,7 +49,7 @@ export function BillingDialog({
     setPending(true)
     setError(null)
     const returnUrl = `${window.location.origin}/?upgrade=pro`
-    const { error: billingError } = pro
+    const { error: billingError } = canManage
       ? await authClient.subscription.billingPortal({ returnUrl })
       : await authClient.subscription.upgrade({
           plan: 'pro',
@@ -59,7 +60,7 @@ export function BillingDialog({
     if (billingError) {
       setError(
         billingError.message ??
-          (pro
+          (canManage
             ? 'Billing management is unavailable.'
             : 'Checkout could not be started.'),
       )
@@ -72,15 +73,21 @@ export function BillingDialog({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>
-            {pro ? 'Trip Studio Pro' : 'Upgrade to Pro'}
+            {pro
+              ? 'Trip Studio Pro'
+              : canManage
+                ? 'Manage billing'
+                : 'Upgrade to Pro'}
           </DialogTitle>
           <DialogDescription>
             {pro
               ? 'Your subscription includes unlimited active trips.'
-              : 'Keep more than one trip active at a time.'}
+              : canManage
+                ? 'Update your payment method or subscription.'
+                : 'Keep more than one trip active at a time.'}
           </DialogDescription>
         </DialogHeader>
-        {!pro && (
+        {!canManage && (
           <div className="grid gap-5 py-2">
             <div>
               <span className="text-3xl font-semibold">
@@ -113,7 +120,11 @@ export function BillingDialog({
             }
             onClick={continueToBilling}
           >
-            {pending ? 'Opening…' : pro ? 'Manage billing' : 'Upgrade to Pro'}
+            {pending
+              ? 'Opening…'
+              : canManage
+                ? 'Manage billing'
+                : 'Upgrade to Pro'}
           </Button>
         </DialogFooter>
       </DialogContent>
