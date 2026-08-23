@@ -37,7 +37,12 @@ Open `http://localhost:3000`, create an account, then connect an MCP client to
 `main` deploys Development and promotes `dev.tripstudio.cc`. A `v*` tag deploys Production. Each
 environment has independent Postgres data and Better Auth secrets. Configure `APP_URL`,
 `DATABASE_URL`, and `BETTER_AUTH_SECRET` in Vercel's Preview and Production environments; mirror
-the database and auth secrets in the matching GitHub environments for migrations.
+the database and auth secrets in the matching GitHub environments for migrations. Billing also
+requires `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, and `STRIPE_ANNUAL_PRICE_ID`. The price must
+be an active annual recurring Stripe Price. Register `https://<APP_URL>/api/auth/stripe/webhook` as
+a Stripe webhook for `checkout.session.completed` and `customer.subscription.created`,
+`customer.subscription.updated`, and `customer.subscription.deleted`, then use its signing secret
+for `STRIPE_WEBHOOK_SECRET`.
 
 The managed development and production databases are separate Neon projects in Frankfurt. Vercel
 Functions run in `fra1` to keep database traffic regional. Self-hosted installations can use any
