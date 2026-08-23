@@ -17,5 +17,8 @@ describe('trip document migration command', () => {
     expect(packageJson).toContain(
       '"db:reconcile-active-trips": "tsx --env-file-if-exists=.env.local',
     )
+    expect(packageJson).toContain(
+      '"vercel-build": "pnpm db:migrate && pnpm build"',
+    )
   })
 })

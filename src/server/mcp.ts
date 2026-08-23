@@ -15,7 +15,7 @@ import { createTripPlanInvitationInputSchema } from '@/domain/trip-sharing'
 import { buildTripPlanView } from '@/domain/trip-plan-view'
 import { VersionConflictError } from '@/domain/trip-plan-repository'
 import { auth } from '@/lib/auth'
-import { env, mcpResource } from '@/lib/env'
+import { mcpResource } from '@/lib/env'
 import { tripPlanRepository } from '@/server/postgres-trip-plan-repository'
 import { ActiveTripLimitError } from '@/server/trip-access'
 import { tripSharingRepository } from '@/server/trip-sharing-repository'
@@ -39,23 +39,12 @@ async function tripMutationResult(work: () => Promise<unknown>) {
     return toolResult(await work())
   } catch (error) {
     if (!(error instanceof ActiveTripLimitError)) throw error
-    const upgradeUrl = error.canUpgrade
-      ? new URL('/?upgrade=pro', env.APP_URL).toString()
-      : undefined
     return {
       isError: true,
-      content: [
-        {
-          type: 'text' as const,
-          text: upgradeUrl
-            ? `${error.message} Upgrade: ${upgradeUrl}`
-            : error.message,
-        },
-      ],
+      content: [{ type: 'text' as const, text: error.message }],
       structuredContent: {
         error: 'active_trip_limit',
         message: error.message,
-        ...(upgradeUrl ? { upgradeUrl } : {}),
       },
     }
   }

@@ -9,7 +9,7 @@ import Stripe from 'stripe'
 
 import { env, mcpResource } from '@/lib/env'
 import { pool } from '@/lib/database'
-import { reconcileFreeActiveTrips } from '@/server/trip-access'
+import { reconcileStripeEntitlement } from '@/server/stripe-entitlement'
 
 export const stripeClient = new Stripe(env.STRIPE_SECRET_KEY)
 
@@ -34,19 +34,9 @@ export const auth = betterAuth({
     stripe({
       stripeClient,
       stripeWebhookSecret: env.STRIPE_WEBHOOK_SECRET,
+      onEvent: reconcileStripeEntitlement,
       subscription: {
         enabled: true,
-        onSubscriptionUpdate: async ({ subscription }) => {
-          if (
-            subscription.status !== 'active' &&
-            subscription.status !== 'trialing'
-          ) {
-            await reconcileFreeActiveTrips(subscription.referenceId)
-          }
-        },
-        onSubscriptionDeleted: async ({ subscription }) => {
-          await reconcileFreeActiveTrips(subscription.referenceId)
-        },
         plans: [
           {
             name: 'pro',

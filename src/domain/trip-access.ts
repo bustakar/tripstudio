@@ -1,7 +1,7 @@
 export const activeTripLimitMessage =
-  'Free accounts can have one active trip. Archive it or upgrade.'
+  'Free accounts can have one active trip. Archive it before activating another.'
 export const activeTripOwnerLimitMessage =
-  'This trip owner has reached their active trip limit. Ask them to archive a trip or upgrade.'
+  'This trip owner has reached their active trip limit. Ask them to archive a trip before activating another.'
 
 export function activeTripIdsToArchive(activeTripIds: string[]) {
   return activeTripIds.slice(1)

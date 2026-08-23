@@ -2,9 +2,7 @@ import { createEnv } from '@t3-oss/env-core'
 import { z } from 'zod'
 
 const isVercel = process.env.VERCEL === '1'
-const requiresBilling =
-  (isVercel || process.env.NODE_ENV === 'production') &&
-  process.env.TRIPSTUDIO_PR_PREVIEW !== '1'
+const requiresBilling = isVercel || process.env.NODE_ENV === 'production'
 
 const stripeSecret = requiresBilling
   ? z.string().startsWith('sk_')
