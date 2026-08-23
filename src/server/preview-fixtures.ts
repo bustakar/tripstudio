@@ -14,6 +14,7 @@ export type PreviewTripFixture = {
   title: string
   startDate?: string
   endDate?: string
+  status: 'active' | 'archived'
   planningBrief: string
   document: TripPlanDocument
 }
@@ -23,6 +24,7 @@ export const completePreviewTrip = {
   title: 'Japan Autumn — Complete Demo',
   startDate: '2026-11-03',
   endDate: '2026-11-18',
+  status: 'active',
   planningBrief:
     'A coverage-complete preview trip with linked and unlinked details, shared stays, daily plans and every supported transport mode.',
   document: {
@@ -366,6 +368,7 @@ export const completePreviewTrip = {
 export const sparsePreviewTrip = {
   id: '00000000-0000-4000-8000-000000000002',
   title: 'Minimal Weekend — Sparse Demo',
+  status: 'archived',
   planningBrief: '',
   document: {
     schemaVersion: 2,
