@@ -95,7 +95,7 @@ export class PostgresTripPlanRepository implements TripPlanRepository {
 
   async create(ownerId: string, input: CreateTripPlanInput) {
     return db.transaction(async (transaction) => {
-      await assertCanActivateTrip(transaction, ownerId)
+      await assertCanActivateTrip(transaction, ownerId, ownerId)
       const plans = await transaction
         .insert(tripPlans)
         .values({
@@ -136,7 +136,7 @@ export class PostgresTripPlanRepository implements TripPlanRepository {
       if (current.length === 0) throw new VersionConflictError()
 
       if (current[0].status === 'archived' && changes.status === 'active') {
-        await assertCanActivateTrip(transaction, current[0].ownerId)
+        await assertCanActivateTrip(transaction, current[0].ownerId, userId)
       }
 
       const document = changes.document
@@ -277,7 +277,7 @@ export class PostgresTripPlanRepository implements TripPlanRepository {
 
       const restored = tripPlanSnapshotSchema.parse(revisions[0].snapshot)
       if (current[0].status === 'archived' && restored.status === 'active') {
-        await assertCanActivateTrip(transaction, current[0].ownerId)
+        await assertCanActivateTrip(transaction, current[0].ownerId, userId)
       }
       const document = tripPlanDocumentSchema.parse(
         normalizeTripPlanDocument(restored.document),

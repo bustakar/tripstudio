@@ -3,6 +3,7 @@ import { and, count, desc, eq, inArray, sql } from 'drizzle-orm'
 import {
   activeTripIdsToArchive,
   activeTripLimitMessage,
+  activeTripOwnerLimitMessage,
   canActivateTrip,
 } from '@/domain/trip-access'
 import { db } from '@/lib/database'
@@ -25,6 +26,7 @@ async function hasPaidAccess(executor: Executor, ownerId: string) {
 export async function assertCanActivateTrip(
   executor: Executor,
   ownerId: string,
+  actorId: string,
 ) {
   await executor.execute(
     sql`SELECT pg_advisory_xact_lock(hashtextextended(${'trip-active:' + ownerId}, 0))`,
@@ -41,7 +43,7 @@ export async function assertCanActivateTrip(
       activeOwnedTripCount: activeTrips.count,
     })
   ) {
-    throw new ActiveTripLimitError()
+    throw new ActiveTripLimitError(actorId === ownerId)
   }
 }
 
@@ -75,7 +77,7 @@ export async function reconcileFreeActiveTrips(ownerId: string) {
 }
 
 export class ActiveTripLimitError extends Error {
-  constructor() {
-    super(activeTripLimitMessage)
+  constructor(public readonly canUpgrade: boolean) {
+    super(canUpgrade ? activeTripLimitMessage : activeTripOwnerLimitMessage)
   }
 }

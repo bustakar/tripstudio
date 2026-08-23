@@ -76,7 +76,7 @@ function TripVersionView({
   const [changingStatus, setChangingStatus] = useState(false)
   const [refreshFailed, setRefreshFailed] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const limitReached = error === activeTripLimitMessage
+  const canUpgradeForLimit = error === activeTripLimitMessage
   const selectionRequest = useRef(0)
 
   const selectedTrip = selectedRevision
@@ -292,7 +292,7 @@ function TripVersionView({
             <AlertTitle>Project</AlertTitle>
             <AlertDescription className="flex items-center justify-between gap-4">
               <span>{error}</span>
-              {limitReached && (
+              {canUpgradeForLimit && (
                 <Button asChild size="sm">
                   <a href="/?upgrade=pro">Upgrade to Pro</a>
                 </Button>

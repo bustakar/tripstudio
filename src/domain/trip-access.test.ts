@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest'
 
-import { activeTripIdsToArchive, canActivateTrip } from '@/domain/trip-access'
+import {
+  activeTripIdsToArchive,
+  activeTripLimitMessage,
+  activeTripOwnerLimitMessage,
+  canActivateTrip,
+} from '@/domain/trip-access'
+import { ActiveTripLimitError } from '@/server/trip-access'
 
 describe('trip access', () => {
   it('allows one active trip during free access', () => {
@@ -24,5 +30,16 @@ describe('trip access', () => {
       'oldest',
     ])
     expect(activeTripIdsToArchive(['only'])).toEqual([])
+  })
+
+  it('only offers the owner an upgrade for an active trip limit', () => {
+    expect(new ActiveTripLimitError(true)).toMatchObject({
+      message: activeTripLimitMessage,
+      canUpgrade: true,
+    })
+    expect(new ActiveTripLimitError(false)).toMatchObject({
+      message: activeTripOwnerLimitMessage,
+      canUpgrade: false,
+    })
   })
 })

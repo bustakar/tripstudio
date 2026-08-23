@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Check } from 'lucide-react'
 
 import { Alert, AlertDescription } from '@/components/ui/alert'
@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/dialog'
 import { authClient } from '@/lib/auth-client'
 import { useBillingStatus } from '@/lib/use-billing-status'
+import { getProPlanPrice } from '@/server/billing-functions'
 
 export function BillingDialog({
   open,
@@ -24,7 +25,24 @@ export function BillingDialog({
   const billing = useBillingStatus()
   const [pending, setPending] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [price, setPrice] = useState<string | null>(null)
   const pro = billing === 'pro'
+
+  useEffect(() => {
+    if (!open || billing !== 'free') return
+    let current = true
+    setPrice(null)
+    void getProPlanPrice()
+      .then((configuredPrice) => {
+        if (current) setPrice(configuredPrice)
+      })
+      .catch(() => {
+        if (current) setPrice('Price shown in checkout')
+      })
+    return () => {
+      current = false
+    }
+  }, [billing, open])
 
   async function continueToBilling() {
     setPending(true)
@@ -65,8 +83,9 @@ export function BillingDialog({
         {!pro && (
           <div className="grid gap-5 py-2">
             <div>
-              <span className="text-3xl font-semibold">$9.99</span>
-              <span className="text-muted-foreground"> / year</span>
+              <span className="text-3xl font-semibold">
+                {price ?? 'Loading price…'}
+              </span>
             </div>
             <div className="flex items-center gap-2 text-sm">
               <Check className="size-4" />

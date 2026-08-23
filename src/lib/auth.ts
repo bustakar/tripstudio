@@ -11,7 +11,7 @@ import { env, mcpResource } from '@/lib/env'
 import { pool } from '@/lib/database'
 import { reconcileFreeActiveTrips } from '@/server/trip-access'
 
-const stripeClient = new Stripe(env.STRIPE_SECRET_KEY)
+export const stripeClient = new Stripe(env.STRIPE_SECRET_KEY)
 
 export const auth = betterAuth({
   appName: 'Trip Studio',

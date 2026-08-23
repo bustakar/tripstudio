@@ -39,19 +39,23 @@ async function tripMutationResult(work: () => Promise<unknown>) {
     return toolResult(await work())
   } catch (error) {
     if (!(error instanceof ActiveTripLimitError)) throw error
-    const upgradeUrl = new URL('/?upgrade=pro', env.APP_URL).toString()
+    const upgradeUrl = error.canUpgrade
+      ? new URL('/?upgrade=pro', env.APP_URL).toString()
+      : undefined
     return {
       isError: true,
       content: [
         {
           type: 'text' as const,
-          text: `${error.message} Upgrade: ${upgradeUrl}`,
+          text: upgradeUrl
+            ? `${error.message} Upgrade: ${upgradeUrl}`
+            : error.message,
         },
       ],
       structuredContent: {
         error: 'active_trip_limit',
         message: error.message,
-        upgradeUrl,
+        ...(upgradeUrl ? { upgradeUrl } : {}),
       },
     }
   }
