@@ -1,7 +1,11 @@
-import { and, count, eq, sql } from 'drizzle-orm'
+import { and, count, desc, eq, inArray, sql } from 'drizzle-orm'
 
-import { activeTripLimitMessage, canActivateTrip } from '@/domain/trip-access'
-import type { db } from '@/lib/database'
+import {
+  activeTripIdsToArchive,
+  activeTripLimitMessage,
+  canActivateTrip,
+} from '@/domain/trip-access'
+import { db } from '@/lib/database'
 import { tripPlans } from '@/lib/schema'
 
 type Executor = Pick<typeof db, 'execute' | 'select'>
@@ -39,6 +43,35 @@ export async function assertCanActivateTrip(
   ) {
     throw new ActiveTripLimitError()
   }
+}
+
+export async function reconcileFreeActiveTrips(ownerId: string) {
+  return db.transaction(async (transaction) => {
+    await transaction.execute(
+      sql`SELECT pg_advisory_xact_lock(hashtextextended(${'trip-active:' + ownerId}, 0))`,
+    )
+    if (await hasPaidAccess(transaction, ownerId)) return []
+
+    const activeTrips = await transaction
+      .select({ id: tripPlans.id })
+      .from(tripPlans)
+      .where(
+        and(eq(tripPlans.ownerId, ownerId), eq(tripPlans.status, 'active')),
+      )
+      .orderBy(desc(tripPlans.updatedAt), desc(tripPlans.id))
+    const ids = activeTripIdsToArchive(activeTrips.map(({ id }) => id))
+    if (ids.length === 0) return ids
+
+    await transaction
+      .update(tripPlans)
+      .set({
+        status: 'archived',
+        version: sql`${tripPlans.version} + 1`,
+        updatedAt: new Date(),
+      })
+      .where(inArray(tripPlans.id, ids))
+    return ids
+  })
 }
 
 export class ActiveTripLimitError extends Error {

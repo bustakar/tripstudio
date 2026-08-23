@@ -11,5 +11,11 @@ describe('trip document migration command', () => {
     expect(packageJson).toContain(
       '"db:migrate-trip-documents": "tsx --env-file-if-exists=.env.local',
     )
+    expect(packageJson).toContain(
+      'auth migrate --config src/lib/auth.ts --yes && pnpm db:reconcile-active-trips',
+    )
+    expect(packageJson).toContain(
+      '"db:reconcile-active-trips": "tsx --env-file-if-exists=.env.local',
+    )
   })
 })

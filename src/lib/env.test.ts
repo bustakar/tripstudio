@@ -30,4 +30,20 @@ describe('server environment', () => {
 
     expect(env.APP_URL).toBe('https://preview.example.test')
   })
+
+  it('rejects missing Stripe credentials in self-hosted production', async () => {
+    vi.stubEnv('NODE_ENV', 'production')
+    vi.stubEnv('VERCEL', '')
+    vi.stubEnv('APP_URL', 'https://tripstudio.example.test')
+    vi.stubEnv('BETTER_AUTH_SECRET', 'x'.repeat(32))
+    vi.stubEnv('DATABASE_URL', 'postgres://localhost/tripstudio')
+    vi.stubEnv('STRIPE_SECRET_KEY', '')
+    vi.stubEnv('STRIPE_WEBHOOK_SECRET', '')
+    vi.stubEnv('STRIPE_ANNUAL_PRICE_ID', '')
+    vi.spyOn(console, 'error').mockImplementation(() => undefined)
+
+    await expect(import('./env')).rejects.toThrow(
+      'Invalid environment variables',
+    )
+  })
 })
