@@ -28,6 +28,7 @@ import {
   tripPlans,
 } from '@/lib/schema'
 import type { StoredTripPlanRow, TripPlanRow } from '@/lib/schema'
+import { assertCanActivateTrip } from '@/server/trip-access'
 
 function normalizeRow(row: StoredTripPlanRow): TripPlanRow {
   return { ...row, document: normalizeTripPlanDocument(row.document) }
@@ -93,28 +94,35 @@ export class PostgresTripPlanRepository implements TripPlanRepository {
   }
 
   async create(ownerId: string, input: CreateTripPlanInput) {
-    const plans = await db
-      .insert(tripPlans)
-      .values({
-        ownerId,
-        title: input.title,
-        planningBrief: input.planningBrief,
-        startDate: input.startDate,
-        endDate: input.endDate,
-        document: normalizeTripPlanDocument(
-          input.document ?? emptyTripPlanDocument(),
-        ),
-      })
-      .returning()
-    if (plans.length !== 1) throw new Error('Trip plan was not created')
-    return normalizeRow(plans[0])
+    return db.transaction(async (transaction) => {
+      await assertCanActivateTrip(transaction, ownerId)
+      const plans = await transaction
+        .insert(tripPlans)
+        .values({
+          ownerId,
+          title: input.title,
+          planningBrief: input.planningBrief,
+          startDate: input.startDate,
+          endDate: input.endDate,
+          document: normalizeTripPlanDocument(
+            input.document ?? emptyTripPlanDocument(),
+          ),
+        })
+        .returning()
+      if (plans.length !== 1) throw new Error('Trip plan was not created')
+      return normalizeRow(plans[0])
+    })
   }
 
   async update(userId: string, input: UpdateTripPlanInput) {
     const { id, expectedVersion, ...changes } = input
     return db.transaction(async (transaction) => {
       const current = await transaction
-        .select({ document: tripPlans.document })
+        .select({
+          document: tripPlans.document,
+          ownerId: tripPlans.ownerId,
+          status: tripPlans.status,
+        })
         .from(tripPlans)
         .where(
           and(
@@ -126,6 +134,10 @@ export class PostgresTripPlanRepository implements TripPlanRepository {
         .for('update')
         .limit(1)
       if (current.length === 0) throw new VersionConflictError()
+
+      if (current[0].status === 'archived' && changes.status === 'active') {
+        await assertCanActivateTrip(transaction, current[0].ownerId)
+      }
 
       const document = changes.document
         ? tripPlanDocumentSchema.parse(
@@ -234,7 +246,11 @@ export class PostgresTripPlanRepository implements TripPlanRepository {
   async restoreRevision(userId: string, input: RestoreTripPlanRevisionInput) {
     return db.transaction(async (transaction) => {
       const current = await transaction
-        .select({ document: tripPlans.document })
+        .select({
+          document: tripPlans.document,
+          ownerId: tripPlans.ownerId,
+          status: tripPlans.status,
+        })
         .from(tripPlans)
         .where(
           and(
@@ -260,6 +276,9 @@ export class PostgresTripPlanRepository implements TripPlanRepository {
       if (revisions.length === 0) throw new RevisionNotFoundError()
 
       const restored = tripPlanSnapshotSchema.parse(revisions[0].snapshot)
+      if (current[0].status === 'archived' && restored.status === 'active') {
+        await assertCanActivateTrip(transaction, current[0].ownerId)
+      }
       const document = tripPlanDocumentSchema.parse(
         normalizeTripPlanDocument(restored.document),
       )

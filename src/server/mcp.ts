@@ -15,8 +15,9 @@ import { createTripPlanInvitationInputSchema } from '@/domain/trip-sharing'
 import { buildTripPlanView } from '@/domain/trip-plan-view'
 import { VersionConflictError } from '@/domain/trip-plan-repository'
 import { auth } from '@/lib/auth'
-import { mcpResource } from '@/lib/env'
+import { env, mcpResource } from '@/lib/env'
 import { tripPlanRepository } from '@/server/postgres-trip-plan-repository'
+import { ActiveTripLimitError } from '@/server/trip-access'
 import { tripSharingRepository } from '@/server/trip-sharing-repository'
 
 function json(value: unknown) {
@@ -30,6 +31,29 @@ function toolResult(value: unknown) {
       { type: 'text' as const, text: JSON.stringify(structuredContent) },
     ],
     structuredContent,
+  }
+}
+
+async function tripMutationResult(work: () => Promise<unknown>) {
+  try {
+    return toolResult(await work())
+  } catch (error) {
+    if (!(error instanceof ActiveTripLimitError)) throw error
+    const upgradeUrl = new URL('/?upgrade=pro', env.APP_URL).toString()
+    return {
+      isError: true,
+      content: [
+        {
+          type: 'text' as const,
+          text: `${error.message} Upgrade: ${upgradeUrl}`,
+        },
+      ],
+      structuredContent: {
+        error: 'active_trip_limit',
+        message: error.message,
+        upgradeUrl,
+      },
+    }
   }
 }
 
@@ -84,9 +108,9 @@ function createTripStudioServer(ownerId: string) {
       inputSchema: createTripPlanInputSchema,
     },
     async (input) =>
-      toolResult({
+      tripMutationResult(async () => ({
         plan: agentPlan(await tripPlanRepository.create(ownerId, input)),
-      }),
+      })),
   )
 
   server.registerTool(
@@ -113,9 +137,9 @@ function createTripStudioServer(ownerId: string) {
       inputSchema: updateTripPlanInputSchema,
     },
     async (input) =>
-      toolResult({
+      tripMutationResult(async () => ({
         plan: agentPlan(await tripPlanRepository.update(ownerId, input)),
-      }),
+      })),
   )
 
   server.registerTool(
@@ -196,11 +220,11 @@ function createTripStudioServer(ownerId: string) {
       inputSchema: restoreTripPlanRevisionInputSchema,
     },
     async (input) =>
-      toolResult({
+      tripMutationResult(async () => ({
         plan: agentPlan(
           await tripPlanRepository.restoreRevision(ownerId, input),
         ),
-      }),
+      })),
   )
 
   return server

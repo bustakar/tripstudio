@@ -2,6 +2,7 @@ import * as React from 'react'
 import { Map, Plug, Settings2 } from 'lucide-react'
 
 import { NavMain } from '@/components/nav-main'
+import { NavPlan } from '@/components/nav-plan'
 import { NavProjects } from '@/components/nav-projects'
 import { NavUser } from '@/components/nav-user'
 import {
@@ -17,9 +18,15 @@ import {
 type AppSidebarProps = React.ComponentProps<typeof Sidebar> & {
   projects: { id: string; title: string }[]
   user: { name: string; email: string; image?: string | null }
+  onOpenBilling: () => void
 }
 
-export function AppSidebar({ projects, user, ...props }: AppSidebarProps) {
+export function AppSidebar({
+  projects,
+  user,
+  onOpenBilling,
+  ...props
+}: AppSidebarProps) {
   return (
     <Sidebar variant="inset" {...props}>
       <SidebarHeader>
@@ -55,6 +62,7 @@ export function AppSidebar({ projects, user, ...props }: AppSidebarProps) {
         />
       </SidebarContent>
       <SidebarFooter>
+        <NavPlan onOpen={onOpenBilling} />
         <NavUser user={{ ...user, avatar: user.image ?? '' }} />
       </SidebarFooter>
     </Sidebar>
