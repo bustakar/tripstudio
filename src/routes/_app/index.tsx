@@ -44,7 +44,10 @@ function ProjectsPage() {
                 <CardHeader>
                   <div className="flex items-center justify-between gap-3">
                     <CardTitle>{plan.title}</CardTitle>
-                    <Badge variant="secondary">v{plan.version}</Badge>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline">{plan.status}</Badge>
+                      <Badge variant="secondary">v{plan.version}</Badge>
+                    </div>
                   </div>
                   <CardDescription>
                     {plan.planningBrief || 'No planning brief yet.'}
