@@ -12,6 +12,15 @@ type EntitlementSubscription = Pick<
   'customer' | 'id' | 'metadata' | 'status'
 >
 
+type EntitlementTransition = {
+  eventType: SubscriptionEntitlementEvent['type']
+  previousStatus?: Stripe.Subscription.Status
+}
+
+function hasPaidStatus(status: Stripe.Subscription.Status | undefined) {
+  return status === 'active' || status === 'trialing'
+}
+
 function isSubscriptionEntitlementEvent(
   event: Stripe.Event,
 ): event is SubscriptionEntitlementEvent {
@@ -48,16 +57,24 @@ async function findReferenceId(subscription: EntitlementSubscription) {
 export async function reconcileStripeEntitlement(event: Stripe.Event) {
   if (!isSubscriptionEntitlementEvent(event)) return
 
-  await reconcileStripeSubscription(event.data.object)
+  await reconcileStripeSubscription(event.data.object, {
+    eventType: event.type,
+    previousStatus: event.data.previous_attributes?.status,
+  })
 }
 
 export async function reconcileStripeSubscription(
   subscription: EntitlementSubscription,
+  transition: EntitlementTransition,
 ) {
-  if (subscription.status === 'active' || subscription.status === 'trialing')
-    return
+  if (hasPaidStatus(subscription.status)) return
+
+  const endedPaidAccess = hasPaidStatus(transition.previousStatus)
+  const deletedWithoutPreviousState =
+    transition.eventType === 'customer.subscription.deleted' &&
+    transition.previousStatus === undefined
+  if (!endedPaidAccess && !deletedWithoutPreviousState) return
 
   const referenceId = await findReferenceId(subscription)
-  // Only downgrades archive excess trips; existing free accounts are grandfathered.
-  if (referenceId) await reconcileFreeActiveTrips(referenceId)
+  if (referenceId) await reconcileFreeActiveTrips(referenceId, subscription.id)
 }

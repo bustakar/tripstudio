@@ -11,13 +11,21 @@ import { tripPlans } from '@/lib/schema'
 
 type Executor = Pick<typeof db, 'execute' | 'select'>
 
-async function hasPaidAccess(executor: Executor, ownerId: string) {
+async function hasPaidAccess(
+  executor: Executor,
+  ownerId: string,
+  excludedStripeSubscriptionId?: string,
+) {
+  const excludedSubscription = excludedStripeSubscriptionId
+    ? sql`AND "stripeSubscriptionId" IS DISTINCT FROM ${excludedStripeSubscriptionId}`
+    : sql``
   const result = await executor.execute<{ paid: boolean }>(sql`
     SELECT EXISTS (
       SELECT 1
       FROM "subscription"
       WHERE "referenceId" = ${ownerId}
         AND "status" IN ('active', 'trialing')
+        ${excludedSubscription}
     ) AS "paid"
   `)
   return result.rows[0]?.paid === true
@@ -47,12 +55,16 @@ export async function assertCanActivateTrip(
   }
 }
 
-export async function reconcileFreeActiveTrips(ownerId: string) {
+export async function reconcileFreeActiveTrips(
+  ownerId: string,
+  excludedStripeSubscriptionId: string,
+) {
   return db.transaction(async (transaction) => {
     await transaction.execute(
       sql`SELECT pg_advisory_xact_lock(hashtextextended(${'trip-active:' + ownerId}, 0))`,
     )
-    if (await hasPaidAccess(transaction, ownerId)) return []
+    if (await hasPaidAccess(transaction, ownerId, excludedStripeSubscriptionId))
+      return []
 
     const activeTrips = await transaction
       .select({ id: tripPlans.id })
