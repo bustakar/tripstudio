@@ -11,5 +11,11 @@ describe('trip document migration command', () => {
     expect(packageJson).toContain(
       '"db:migrate-trip-documents": "tsx --env-file-if-exists=.env.local',
     )
+    expect(packageJson).toContain(
+      'drizzle-kit migrate && auth migrate --config src/lib/auth.ts --yes',
+    )
+    expect(packageJson).toContain(
+      '"vercel-build": "pnpm db:migrate && pnpm build"',
+    )
   })
 })

@@ -1,6 +1,8 @@
+import { useEffect, useState } from 'react'
 import { Outlet, createFileRoute, redirect } from '@tanstack/react-router'
 
 import { AppSidebar } from '@/components/app-sidebar'
+import { BillingDialog } from '@/components/billing-dialog'
 import { Separator } from '@/components/ui/separator'
 import {
   SidebarInset,
@@ -24,9 +26,29 @@ export const Route = createFileRoute('/_app')({
 function AppLayout() {
   const projects = Route.useLoaderData()
   const { user } = Route.useRouteContext()
+  const [billingOpen, setBillingOpen] = useState(false)
+
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get('upgrade') === 'pro')
+      setBillingOpen(true)
+  }, [])
+
+  function changeBillingOpen(open: boolean) {
+    setBillingOpen(open)
+    if (open) return
+    const url = new URL(window.location.href)
+    if (!url.searchParams.has('upgrade')) return
+    url.searchParams.delete('upgrade')
+    window.history.replaceState(window.history.state, '', url)
+  }
+
   return (
     <SidebarProvider>
-      <AppSidebar projects={projects} user={user} />
+      <AppSidebar
+        projects={projects}
+        user={user}
+        onOpenBilling={() => setBillingOpen(true)}
+      />
       <SidebarInset>
         <header className="flex h-14 shrink-0 items-center gap-2 border-b px-4">
           <SidebarTrigger className="-ml-1" />
@@ -35,6 +57,7 @@ function AppLayout() {
         </header>
         <Outlet />
       </SidebarInset>
+      <BillingDialog open={billingOpen} onOpenChange={changeBillingOpen} />
     </SidebarProvider>
   )
 }
