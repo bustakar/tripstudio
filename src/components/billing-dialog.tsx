@@ -81,10 +81,10 @@ export function BillingDialog({
           </DialogTitle>
           <DialogDescription>
             {pro
-              ? 'Your Trip Studio Pro subscription is active.'
+              ? 'Your subscription includes unlimited active trips.'
               : canManage
                 ? 'Update your payment method or subscription.'
-                : 'Subscribe to Trip Studio Pro.'}
+                : 'Keep more than one trip active at a time.'}
           </DialogDescription>
         </DialogHeader>
         {!canManage && (
@@ -96,7 +96,7 @@ export function BillingDialog({
             </div>
             <div className="flex items-center gap-2 text-sm">
               <Check className="size-4" />
-              Trip Studio Pro
+              Unlimited active trips
             </div>
           </div>
         )}

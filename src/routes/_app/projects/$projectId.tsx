@@ -16,6 +16,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { normalizeTripPlanDocument } from '@/domain/trip-plan'
+import { activeTripLimitMessage } from '@/domain/trip-access'
 import type { TripPlanRevisionPage } from '@/domain/trip-plan-repository'
 import type { TripPlanRevisionRow, TripPlanRow } from '@/lib/schema'
 import {
@@ -23,6 +24,7 @@ import {
   getTripPlanWithRevisionHistory,
   listTripPlanRevisions,
   restoreTripPlanRevision,
+  updateTripPlan,
 } from '@/server/trip-plan-functions'
 
 const revisionTimestamp = new Intl.DateTimeFormat('en-GB', {
@@ -71,8 +73,10 @@ function TripVersionView({
   const [loadingVersion, setLoadingVersion] = useState<number | null>(null)
   const [loadingMore, setLoadingMore] = useState(false)
   const [restoring, setRestoring] = useState(false)
+  const [changingStatus, setChangingStatus] = useState(false)
   const [refreshFailed, setRefreshFailed] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const canUpgradeForLimit = error === activeTripLimitMessage
   const selectionRequest = useRef(0)
 
   const selectedTrip = selectedRevision
@@ -174,6 +178,37 @@ function TripVersionView({
     }
   }
 
+  async function changeTripStatus() {
+    setChangingStatus(true)
+    setError(null)
+    try {
+      await updateTripPlan({
+        data: {
+          id: plan.id,
+          expectedVersion: plan.version,
+          status: plan.status === 'active' ? 'archived' : 'active',
+        },
+      })
+    } catch (caught) {
+      setError(
+        caught instanceof Error
+          ? caught.message
+          : 'The project status could not be changed.',
+      )
+      setChangingStatus(false)
+      return
+    }
+
+    try {
+      await router.invalidate()
+    } catch {
+      setRefreshFailed(true)
+      setError('The project status changed, but the page could not refresh.')
+    } finally {
+      setChangingStatus(false)
+    }
+  }
+
   const versionControl = (
     <div className="flex shrink-0 items-center gap-2">
       <DropdownMenu>
@@ -239,6 +274,21 @@ function TripVersionView({
           {restoring ? 'Restoring…' : 'Restore'}
         </Button>
       )}
+      {selectedVersion === plan.version && (
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          disabled={changingStatus || refreshFailed}
+          onClick={changeTripStatus}
+        >
+          {changingStatus
+            ? 'Saving…'
+            : plan.status === 'active'
+              ? 'Archive'
+              : 'Activate'}
+        </Button>
+      )}
     </div>
   )
 
@@ -247,8 +297,15 @@ function TripVersionView({
       {error && (
         <div className="mx-auto max-w-4xl px-4 pt-6 sm:px-8 sm:pt-10">
           <Alert variant="destructive">
-            <AlertTitle>Version history</AlertTitle>
-            <AlertDescription>{error}</AlertDescription>
+            <AlertTitle>Project</AlertTitle>
+            <AlertDescription className="flex items-center justify-between gap-4">
+              <span>{error}</span>
+              {canUpgradeForLimit && (
+                <Button asChild size="sm">
+                  <a href="/?upgrade=pro">Upgrade to Pro</a>
+                </Button>
+              )}
+            </AlertDescription>
           </Alert>
         </div>
       )}
