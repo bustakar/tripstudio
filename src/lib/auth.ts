@@ -9,6 +9,7 @@ import Stripe from 'stripe'
 
 import { env, mcpResource } from '@/lib/env'
 import { pool } from '@/lib/database'
+import { reconcileStripeEntitlement } from '@/server/stripe-entitlement'
 
 export const stripeClient = new Stripe(env.STRIPE_SECRET_KEY)
 
@@ -33,12 +34,14 @@ export const auth = betterAuth({
     stripe({
       stripeClient,
       stripeWebhookSecret: env.STRIPE_WEBHOOK_SECRET,
+      onEvent: reconcileStripeEntitlement,
       subscription: {
         enabled: true,
         plans: [
           {
             name: 'pro',
             priceId: env.STRIPE_ANNUAL_PRICE_ID,
+            limits: { activeTrips: 'unlimited' },
           },
         ],
       },

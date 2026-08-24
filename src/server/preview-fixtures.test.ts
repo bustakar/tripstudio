@@ -17,6 +17,10 @@ describe('preview fixtures', () => {
       password: 'tripstudio-preview',
     })
     expect(previewTrips).toHaveLength(2)
+    expect(previewTrips.map(({ status }) => status)).toEqual([
+      'active',
+      'archived',
+    ])
     previewTrips.forEach((trip) =>
       expect(() => tripPlanDocumentSchema.parse(trip.document)).not.toThrow(),
     )
