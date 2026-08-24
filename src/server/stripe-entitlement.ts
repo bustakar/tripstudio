@@ -58,5 +58,6 @@ export async function reconcileStripeSubscription(
     return
 
   const referenceId = await findReferenceId(subscription)
+  // Only downgrades archive excess trips; existing free accounts are grandfathered.
   if (referenceId) await reconcileFreeActiveTrips(referenceId)
 }
